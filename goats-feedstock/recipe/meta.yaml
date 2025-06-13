@@ -40,8 +40,11 @@ requirements:
     - marshmallow-jsonapi >=0.24.0
     - numpydoc >=1.8.0,<2
     - tomtoolkit >=2.24.5
-    - dragons=4.0.0
-    - redis-server>=7.2.8,<8
+    - dragons =4.0.0
+    - redis-server >=7.2.8,<8
+    - daphne >=4.2.0,<5
+    - watchdog >=6.0.0,<7
+    - redis >=6.2.0,<7
 
 test:
   imports:
