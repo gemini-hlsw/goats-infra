@@ -30,7 +30,7 @@ jobs:
 
       - name: Install build tools
         run: |
-          conda install -y conda-build conda-verify
+          conda install -y conda-build
 
       - name: Create output folder
         run: mkdir -p conda-artifacts
