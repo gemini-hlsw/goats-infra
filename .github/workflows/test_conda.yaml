@@ -26,7 +26,7 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
-          channels: https://gemini-hlsw.github.io/goats/conda, conda-forge
+          channels: https://gemini-hlsw.github.io/goats/conda, http://astroconda.gemini.edu/public, conda-forge
           channel-priority: strict
           conda-remove-defaults: "true"
 
