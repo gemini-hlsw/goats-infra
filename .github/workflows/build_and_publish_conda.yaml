@@ -1,0 +1,163 @@
+name: Build and publish Conda packages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  metadata:
+    name: Parse metadata for workflow
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.metadata.outputs.name }}
+      version: ${{ steps.metadata.outputs.version }}
+      build: ${{ steps.metadata.outputs.build }}
+      source: ${{ steps.metadata.outputs.source }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update && sudo apt-get install -y yq jq
+          pip install jinja2-cli
+
+
+      - name: Render meta.yaml and extract info
+        id: metadata
+        run: |
+          jinja2 goats-feedstock/recipe/meta.yaml > ${{ runner.temp }}/rendered.yaml
+          name=$(yq -r '.package.name' ${{ runner.temp }}/rendered.yaml)
+          version=$(yq -r '.package.version' ${{ runner.temp }}/rendered.yaml)
+          build=$(yq -r '.build.number' ${{ runner.temp }}/rendered.yaml)
+          source=$(yq -r '.source.url' ${{ runner.temp }}/rendered.yaml)
+
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+          echo "source=$source" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Conda build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-13] # macos-13 = Intel-based runner.
+        python-version: ["3.12"]
+    runs-on: ${{ matrix.os }}
+    needs: metadata
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Miniforge
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          miniforge-version: latest
+          python-version: ${{ matrix.python-version }}
+          auto-activate-base: true
+          channels: conda-forge, http://astroconda.gemini.edu/public
+          channel-priority: strict
+          conda-remove-defaults: "true"
+
+      - name: Install build tools
+        run: |
+          conda install -y conda-build
+
+      - name: Create output folder
+        run: mkdir -p ${{ runner.temp }}/conda-artifacts
+
+      - name: Build recipe
+        run: |
+          conda build goats-feedstock/recipe \
+            --output-folder ${{ runner.temp }}/conda-artifacts \
+            --channel conda-forge \
+            --channel http://astroconda.gemini.edu/public \
+            --override-channels \
+            --no-anaconda-upload
+
+      - name: Upload built artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }}-${{ runner.arch }}-${{ needs.metadata.outputs.version }}-${{ needs.metadata.outputs.build }}
+          overwrite: true
+          path: ${{ runner.temp }}/conda-artifacts
+
+  publish:
+    needs: [build, metadata]
+    name: Publish conda packages
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.12"]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Miniforge
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          miniforge-version: latest
+          python-version: ${{ matrix.python-version }}
+          auto-activate-base: true
+          channels: conda-forge
+          channel-priority: strict
+          conda-remove-defaults: "true"
+
+      - name: Install index tools
+        run: |
+          conda install -y conda-index
+
+      - name: Download built artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}
+          merge-multiple: true
+
+      - name: Move built Conda packages into Conda channel
+        run: |
+          cp ${{ runner.temp }}/linux-64/*.conda docs/gh_pages/conda/linux-64
+          cp ${{ runner.temp }}/osx-64/*.conda docs/gh_pages/conda/osx-64
+          ls -Rl docs/gh_pages/conda
+
+      - name: Index Conda channel
+        run: python -m conda_index --channeldata docs/gh_pages/conda
+
+      - name: Create pull request
+        id: cpr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          add-paths: |
+            docs/gh_pages/conda
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+          branch: ${{ needs.metadata.outputs.name }}-${{ needs.metadata.outputs.version }}-${{ needs.metadata.outputs.build }}
+          title: Publish `goats-${{ needs.metadata.outputs.version }}-${{ needs.metadata.outputs.build }}` to Conda.
+          body: |
+            This PR publishes a new Conda package version to the internal channel.
+
+            - **Package:** `${{ needs.metadata.outputs.name }}`
+            - **Version:** `${{ needs.metadata.outputs.version }}`
+            - **Build number:** `${{ needs.metadata.outputs.build }}`
+            - **Source URL:** `${{ needs.metadata.outputs.source }}`
+
+            The following platforms were built and included:
+            - `linux-64`
+            - `osx-64`
+
+            The Conda index has been updated and committed to `docs/gh_pages/conda/`.
+          reviewers: davner
+          assignees: davner
+          commit-message: "Publish ${{ needs.metadata.outputs.name }}-${{ needs.metadata.outputs.version }}-${{ needs.metadata.outputs.build }}."

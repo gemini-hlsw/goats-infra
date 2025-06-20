@@ -15,7 +15,7 @@ build:
     - goats = goats_cli:cli
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
   skip: true   # [win or arm64]
-  number: 0
+  number: 1
 
 requirements:
   host:
