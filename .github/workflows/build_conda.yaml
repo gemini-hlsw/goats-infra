@@ -69,3 +69,9 @@ jobs:
 
       - name: Display contents
         run: ls -Rl ${{ runner.temp }}
+
+      - name: Move contents
+        run: |
+          cp ${{ runner.temp }}/linux-64/*.conda docs/gh_pages/conda/linux-64
+          cp ${{ runner.temp }}/osx-64/*.conda docs/gh_pages/conda/osx-64
+          ls -Rl docs/gh_pages/conda
