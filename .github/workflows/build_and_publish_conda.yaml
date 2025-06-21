@@ -118,7 +118,7 @@ jobs:
 
       - name: Install index tools
         run: |
-          conda install -y conda-index
+          conda install -y conda-index conda-build
 
       - name: Download built artifacts
         uses: actions/download-artifact@v4
