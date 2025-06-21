@@ -25,10 +25,10 @@ jobs:
         id: metadata
         run: |
           jinja2 goats-feedstock/recipe/meta.yaml > ${{ runner.temp }}/rendered.yaml
-          name=$(yq '.package.name' ${{ runner.temp }}/rendered.yaml)
-          version=$(yq '.package.version' ${{ runner.temp }}/rendered.yaml)
-          build=$(yq '.build.number' ${{ runner.temp }}/rendered.yaml)
-          source=$(yq '.source.url' ${{ runner.temp }}/rendered.yaml)
+          name=$(yq -r '.package.name' ${{ runner.temp }}/rendered.yaml)
+          version=$(yq -r '.package.version' ${{ runner.temp }}/rendered.yaml)
+          build=$(yq -r '.build.number' ${{ runner.temp }}/rendered.yaml)
+          source=$(yq -r '.source.url' ${{ runner.temp }}/rendered.yaml)
 
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -39,7 +39,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: metadata
     steps:
-      - run: echo ${{ needs.metadata.outputs.name }}
+      - name: Print out results
+        run: |
+          echo ${{ needs.metadata.outputs.name }}
+          echo ${{ needs.metadata.outputs.name }}
+          echo ${{ needs.metadata.outputs.name }}
+          echo ${{ needs.metadata.outputs.name }}
 
   # build:
   #   name: Conda build (${{ matrix.os }})
