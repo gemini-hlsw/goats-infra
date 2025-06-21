@@ -5,6 +5,7 @@ on:
 
 jobs:
   metadata:
+    name: Parse metadata for workflow
     runs-on: ubuntu-latest
     outputs:
       name: ${{ steps.metadata.outputs.name }}
@@ -18,8 +19,9 @@ jobs:
 
       - name: Install tools
         run: |
-          pip install jinja2-cli
           sudo apt-get update && sudo apt-get install -y yq jq
+          pip install jinja2-cli
+
 
       - name: Render meta.yaml and extract info
         id: metadata
@@ -34,17 +36,6 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "build=$build" >> "$GITHUB_OUTPUT"
           echo "source=$source" >> "$GITHUB_OUTPUT"
-
-  test:
-    runs-on: ubuntu-latest
-    needs: metadata
-    steps:
-      - name: Print out results
-        run: |
-          echo ${{ needs.metadata.outputs.name }}
-          echo ${{ needs.metadata.outputs.version }}
-          echo ${{ needs.metadata.outputs.build }}
-          echo ${{ needs.metadata.outputs.source }}
 
   build:
     name: Conda build (${{ matrix.os }})
@@ -124,6 +115,10 @@ jobs:
           channels: conda-forge
           channel-priority: strict
           conda-remove-defaults: "true"
+
+      - name: Install index tools
+        run: |
+          conda install -y conda-index
 
       - name: Download built artifacts
         uses: actions/download-artifact@v4
