@@ -32,3 +32,11 @@ jobs:
 
       - name: Install GOATS from Conda channel
         run: conda install goats -y
+
+      - name: Run setup in CI mode
+        env:
+          DJANGO_SUPERUSER_PASSWORD: changeme
+        run: goats install --ci
+
+      - name: Start GOATS
+        run: goats run
