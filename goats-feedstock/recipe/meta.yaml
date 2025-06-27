@@ -1,5 +1,5 @@
 {% set name = "goats" %}
-{% set version = "25.6.0" %}
+{% set version = "25.6.1" %}
 {% set python_min = "3.12" %}
 
 package:
@@ -8,14 +8,14 @@ package:
 
 source:
   url: https://github.com/gemini-hlsw/goats/archive/{{ version }}.tar.gz
-  sha256: 2c2ed83f86bdc526f1e88f0ab581403ad6d393f178b79608d79be0e38e6a15bc
+  sha256: 1a11443d85cd43584a77df5ac9115b7d6d0cc9be21e0dbfdfd619256791b723b
 
 build:
   entry_points:
     - goats = goats_cli:cli
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
   skip: true   # [win or arm64]
-  number: 1
+  number: 0
 
 requirements:
   host:
@@ -44,6 +44,7 @@ requirements:
     - daphne >=4.2.0,<5
     - watchdog >=6.0.0,<7
     - redis-py >=6.2.0,<7
+    - gpp-client >=25.6.0
 
 test:
   imports:
