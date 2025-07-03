@@ -43,4 +43,11 @@ jobs:
         run: goats install --ci
 
       - name: Start GOATS
-        run: timeout --preserve-status 60 goats run
+        run: |
+          timeout 60 goats run
+            status=$?
+            if [ "$status" -eq 124 ]; then
+              echo "Timed out as expected"; exit 0
+            else
+              exit "$status"
+            fi
