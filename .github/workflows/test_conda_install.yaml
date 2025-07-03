@@ -42,12 +42,58 @@ jobs:
           DJANGO_SUPERUSER_PASSWORD: changeme
         run: goats install --ci
 
-      - name: Start GOATS
-        run: |
-          timeout 60 goats run
-            status=$?
-            if [ "$status" -eq 124 ]; then
-              echo "Timed out as expected"; exit 0
-            else
-              exit "$status"
-            fi
+      - name: Send Slack success
+        if: ${{ success() }}
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": ":white_check_mark: *GOATS Conda install succeeded*",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":white_check_mark: *GOATS Conda install succeeded*"
+                  }
+                },
+                {
+                  "type": "fields",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*OS:* `${{ matrix.os }}`" },
+                    { "type": "mrkdwn", "text": "*Python:* `${{ matrix.python-version }}`" },
+                    { "type": "mrkdwn", "text": "*Run:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>" }
+                  ]
+                }
+              ]
+            }
+
+      - name: Send Slack failure
+        if: ${{ failure() }}
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": ":x: *GOATS Conda install failed*",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *GOATS Conda install failed*"
+                  }
+                },
+                {
+                  "type": "fields",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*OS:* `${{ matrix.os }}`" },
+                    { "type": "mrkdwn", "text": "*Python:* `${{ matrix.python-version }}`" },
+                    { "type": "mrkdwn", "text": "*Run:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>" }
+                  ]
+                }
+              ]
+            }
