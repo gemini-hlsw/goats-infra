@@ -20,6 +20,10 @@ jobs:
         python-version: ["3.12"]
 
     steps:
+      - name: Install coreutils (macOS only)
+        if: ${{ matrix.os == 'macos-13' }}
+        run: brew install coreutils
+
       - name: Setup Miniforge
         uses: conda-incubator/setup-miniconda@v3
         with:
@@ -39,4 +43,4 @@ jobs:
         run: goats install --ci
 
       - name: Start GOATS
-        run: goats run
+        run: timeout 60 goats run
