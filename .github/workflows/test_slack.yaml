@@ -14,31 +14,43 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-              "attachments": [
+              "blocks": [
                 {
-                  "color": "#36a64f",
-                  "blocks": [
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":white_check_mark: Nightly GOATS Conda install succeeded"
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View run",
+                      "emoji": true
+                    },
+                    "value": "click_me_123",
+                    "url": "https://google.com",
+                    "action_id": "button-action"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
                     {
-                      "type": "section",
-                      "text": {
-                        "type": "mrkdwn",
-                        "text": ":white_check_mark: *Nightly GOATS Conda install succeeded*"
-                      }
+                      "type": "mrkdwn",
+                      "text": "*OS:*\nCHANGE ME"
                     },
                     {
-                      "type": "actions",
-                      "elements": [
-                        {
-                          "type": "button",
-                          "text": {
-                            "type": "plain_text",
-                            "text": "View run logs",
-                            "emoji": true
-                          },
-                          "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-                          "style": "primary"
-                        }
-                      ]
+                      "type": "mrkdwn",
+                      "text": "*Architecture:*\nCHANGE ME"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Python Version:*\nCHANGE ME"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Date:*\nCHANGE ME"
                     }
                   ]
                 }

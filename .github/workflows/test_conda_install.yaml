@@ -50,25 +50,49 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": ":white_check_mark: *GOATS Conda install succeeded*",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":white_check_mark: *GOATS Conda install succeeded*"
+                    "text": ":white_check_mark: Nightly GOATS Conda install succeeded"
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View run",
+                      "emoji": true
+                    },
+                    "value": "view_run",
+                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                    "action_id": "button-action"
                   }
                 },
                 {
-                  "type": "fields",
+                  "type": "section",
                   "fields": [
-                    { "type": "mrkdwn", "text": "*OS:* `${{ matrix.os }}`" },
-                    { "type": "mrkdwn", "text": "*Python:* `${{ matrix.python-version }}`" },
-                    { "type": "mrkdwn", "text": "*Run:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>" }
+                    {
+                      "type": "mrkdwn",
+                      "text": "*OS:*\n`${{ matrix.os }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Architecture:*\n`${{ runner.arch }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Python Version:*\n`${{ matrix.python-version }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Notify:*\n<@Dan Avner>"
+                    },
                   ]
                 }
               ]
             }
+
 
       - name: Send Slack failure
         if: ${{ failure() }}
@@ -78,21 +102,44 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-              "text": ":x: *GOATS Conda install failed*",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":x: *GOATS Conda install failed*"
+                    "text": ":x: Nightly GOATS Conda install failed"
+                  },
+                  "accessory": {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View run",
+                      "emoji": true
+                    },
+                    "value": "view_run",
+                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                    "action_id": "button-action"
                   }
                 },
                 {
-                  "type": "fields",
+                  "type": "section",
                   "fields": [
-                    { "type": "mrkdwn", "text": "*OS:* `${{ matrix.os }}`" },
-                    { "type": "mrkdwn", "text": "*Python:* `${{ matrix.python-version }}`" },
-                    { "type": "mrkdwn", "text": "*Run:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>" }
+                    {
+                      "type": "mrkdwn",
+                      "text": "*OS:*\n`${{ matrix.os }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Architecture:*\n`${{ runner.arch }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Python Version:*\n`${{ matrix.python-version }}`"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Notify:*\n<@Dan Avner>"
+                    },
                   ]
                 }
               ]
