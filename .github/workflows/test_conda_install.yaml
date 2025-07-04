@@ -84,10 +84,6 @@ jobs:
                       "type": "mrkdwn",
                       "text": "*Python Version:*\n`${{ matrix.python-version }}`"
                     },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Notify:*\n<@Dan Avner>"
-                    },
                   ]
                 }
               ]
@@ -107,7 +103,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":x: Nightly GOATS Conda install failed"
+                    "text": ":x: <@U05HU8PERA5> Nightly GOATS Conda install failed"
                   },
                   "accessory": {
                     "type": "button",
@@ -135,10 +131,6 @@ jobs:
                     {
                       "type": "mrkdwn",
                       "text": "*Python Version:*\n`${{ matrix.python-version }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Notify:*\n<@Dan Avner>"
                     },
                   ]
                 }
