@@ -65,7 +65,7 @@ jobs:
                       "emoji": true
                     },
                     "value": "view_run",
-                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ github.job }}",
                     "action_id": "button-action"
                   },
                   "fields": [
@@ -111,7 +111,7 @@ jobs:
                       "emoji": true
                     },
                     "value": "view_run",
-                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ github.job }}",
                     "action_id": "button-action"
                   },
                   "fields": [
