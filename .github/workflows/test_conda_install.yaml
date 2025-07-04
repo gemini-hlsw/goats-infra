@@ -82,7 +82,6 @@ jobs:
                       "text": "*Python Version:*\n`${{ matrix.python-version }}`"
                     },
                   ],
-                  "type": "divider",
                 }
               ]
             }
@@ -128,7 +127,6 @@ jobs:
                       "text": "*Python Version:*\n`${{ matrix.python-version }}`"
                     },
                   ],
-                  "type": "divider",
                 }
               ]
             }
