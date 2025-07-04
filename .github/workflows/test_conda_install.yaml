@@ -81,7 +81,8 @@ jobs:
                       "type": "mrkdwn",
                       "text": "*Python Version:*\n`${{ matrix.python-version }}`"
                     },
-                  ]
+                  ],
+                  "type": "divider",
                 }
               ]
             }
@@ -126,7 +127,8 @@ jobs:
                       "type": "mrkdwn",
                       "text": "*Python Version:*\n`${{ matrix.python-version }}`"
                     },
-                  ]
+                  ],
+                  "type": "divider",
                 }
               ]
             }
