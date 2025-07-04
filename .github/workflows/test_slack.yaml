@@ -14,33 +14,33 @@ jobs:
           webhook-type: incoming-webhook
           payload: |
             {
-                "attachments": [
+              "attachments": [
                 {
-                    "color": "#36a64f",              // green bar = success
-                    "blocks": [
+                  "color": "#36a64f",
+                  "blocks": [
                     {
-                        "type": "section",
-                        "text": {
+                      "type": "section",
+                      "text": {
                         "type": "mrkdwn",
                         "text": ":white_check_mark: *Nightly GOATS Conda install succeeded*"
-                        }
+                      }
                     },
                     {
-                        "type": "actions",
-                        "elements": [
+                      "type": "actions",
+                      "elements": [
                         {
-                            "type": "button",
-                            "text": {
+                          "type": "button",
+                          "text": {
                             "type": "plain_text",
                             "text": "View run logs",
                             "emoji": true
-                            },
-                            "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-                            "style": "primary"
+                          },
+                          "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                          "style": "primary"
                         }
-                        ]
+                      ]
                     }
-                    ]
+                  ]
                 }
-                ]
+              ]
             }
