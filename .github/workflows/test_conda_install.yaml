@@ -75,7 +75,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Architecture:*\n`${{ runner.arch }}"
+                      "text": "*Architecture:*\n`${{ runner.arch }}`"
                     },
                     {
                       "type": "mrkdwn",
@@ -120,7 +120,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Architecture:*\n`${{ runner.arch }}"
+                      "text": "*Architecture:*\n`${{ runner.arch }}`"
                     },
                     {
                       "type": "mrkdwn",
