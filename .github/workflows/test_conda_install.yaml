@@ -67,10 +67,7 @@ jobs:
                     "value": "view_run",
                     "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
                     "action_id": "button-action"
-                  }
-                },
-                {
-                  "type": "section",
+                  },
                   "fields": [
                     {
                       "type": "mrkdwn",
@@ -115,10 +112,7 @@ jobs:
                     "value": "view_run",
                     "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
                     "action_id": "button-action"
-                  }
-                },
-                {
-                  "type": "section",
+                  },
                   "fields": [
                     {
                       "type": "mrkdwn",
