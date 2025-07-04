@@ -50,7 +50,7 @@ jobs:
                     },
                     {
                       "type": "mrkdwn",
-                      "text": "*Notify:*\n<@Dan Avner>"
+                      "text": "*Notify:*\n<@U05HU8PERA5>"
                     },
                   ]
                 }
