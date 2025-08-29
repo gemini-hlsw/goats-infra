@@ -65,12 +65,38 @@
 
     <section class="container mt-5 py-5 text-center" id="quickStart">
       <h2 class="text-center">Quick Start</h2>
-      <p class="text-center lead">Install GOATS with a single command:</p>
-      <p class="pt-3"><code>conda install -c https://gemini-hlsw.github.io/goats-infra/conda goats</code></p>
-      <p class="text-center">See the <a href="https://goats.readthedocs.io/en/latest/" target="_blank">ReadTheDocs</a> for full installation instructions and documentation.
-      </p>
-    </section>
+      <p class="text-center lead">Install GOATS in a few simple steps:</p>
 
+  <div class="text-start d-inline-block text-start">
+    <p><strong>1. Configure Conda channels (order matters):</strong></p>
+    <pre><code>conda config --add channels conda-forge
+conda config --add channels http://astroconda.gemini.edu/public
+conda config --add channels https://gemini-hlsw.github.io/goats-infra/conda
+conda config --set channel_priority strict</code></pre>
+
+    <p class="fst-italic small text-muted">
+      The <code>goats-infra</code> channel must be highest priority to ensure GOATS and related packages are installed correctly. 
+      <code>astroconda.gemini.edu</code> is required for the <code>dragons</code> dependency. Most other packages come from <code>conda-forge</code>.
+    </p>
+    <p><strong>2. Create and activate the GOATS environment:</strong></p>
+    <pre><code>conda create -n goats-env python=3.12 goats
+conda activate goats-env</code></pre>
+<p><strong>3. Set up your GOATS instance:</strong></p>
+    <pre><code>goats install</code></pre>
+
+    <p class="fst-italic small text-muted">
+      This will prompt you to create a username and password and initialize the interface. By default, a <code>GOATS</code> folder will be created in your current directory. 
+      Use <code>-d &lt;directory&gt;</code> to specify a different location.
+    </p>
+
+    <p><strong>4. Launch the GOATS web interface:</strong></p>
+    <pre><code>goats run</code></pre>
+
+    <p class="fst-italic small text-muted">
+      This command starts the local GOATS server and opens the interface in your default browser. If you installed GOATS to a custom directory, use <code>-d &lt;directory&gt;</code> again here.
+    </p>
+  </div>
+    </section>
     <section class="container mt-5 py-5" id="about">
       <div class="row gy-3">
         <div class="col-12">
