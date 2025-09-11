@@ -36,7 +36,7 @@ jobs:
           show-channel-urls: true
 
       - name: Create and test GOATS conda environment
-        run: conda create -n goats-env python=${{ matrix.python-version }} goats --debug --yes
+        run: conda create -n goats-env python=${{ matrix.python-version }} goats "keyring<24.3.0" --debug --yes
 
       # - name: Install GOATS from Conda channel
       #   run: conda install goats -y
