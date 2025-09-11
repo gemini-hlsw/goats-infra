@@ -31,7 +31,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
           channels: https://gemini-hlsw.github.io/goats-infra/conda, http://astroconda.gemini.edu/public, conda-forge
-          channel-priority: strict
+          channel-priority: flexible
           conda-remove-defaults: "true"
           show-channel-urls: true
 
