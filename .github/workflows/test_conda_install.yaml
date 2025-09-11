@@ -35,9 +35,6 @@ jobs:
           conda-remove-defaults: "true"
           show-channel-urls: true
 
-      # - name: Create and test GOATS conda environment
-      #   run: conda create -n goats-env python=${{ matrix.python-version }} goats --debug --yes
-
       - name: Install GOATS from Conda channel
         run: conda install goats -y
 
