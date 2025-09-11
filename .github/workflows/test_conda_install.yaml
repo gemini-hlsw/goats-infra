@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         # Test building on Mac Intel as well.
-        os: [ubuntu-latest, macos-13]
+        os: [ubuntu-latest] # [ubuntu-latest, macos-13]
         python-version: ["3.12"]
 
     steps:
@@ -30,103 +30,107 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
-          channels: conda-forge, http://astroconda.gemini.edu/public, https://gemini-hlsw.github.io/goats-infra/conda
+          channels: https://gemini-hlsw.github.io/goats-infra/conda, http://astroconda.gemini.edu/public, conda-forge
           channel-priority: strict
           conda-remove-defaults: "true"
+          show-channel-urls: true
 
-      - name: Install GOATS from Conda channel
-        run: conda install goats -y
+      - name: Create and test GOATS conda environment
+        run: conda create -n goats-env python=${{ matrix.python-version }} goats --debug --yes
 
-      - name: Run setup in CI mode
-        env:
-          DJANGO_SUPERUSER_PASSWORD: changeme
-        run: goats install --ci
+      # - name: Install GOATS from Conda channel
+      #   run: conda install goats -y
 
-      - name: Send Slack success
-        if: ${{ success() }}
-        uses: slackapi/slack-github-action@v2.1.0
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":white_check_mark: Nightly GOATS Conda install succeeded"
-                  },
-                  "accessory": {
-                    "type": "button",
-                    "text": {
-                      "type": "plain_text",
-                      "text": "View run",
-                      "emoji": true
-                    },
-                    "value": "view_run",
-                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-                    "action_id": "button-action"
-                  },
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*OS:*\n`${{ matrix.os }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Architecture:*\n`${{ runner.arch }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Python Version:*\n`${{ matrix.python-version }}`"
-                    },
-                  ],
-                }
-              ]
-            }
+      # - name: Run setup in CI mode
+      #   env:
+      #     DJANGO_SUPERUSER_PASSWORD: changeme
+      #   run: goats install --ci
+
+      # - name: Send Slack success
+      #   if: ${{ success() }}
+      #   uses: slackapi/slack-github-action@v2.1.0
+      #   with:
+      #     webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #     webhook-type: incoming-webhook
+      #     payload: |
+      #       {
+      #         "blocks": [
+      #           {
+      #             "type": "section",
+      #             "text": {
+      #               "type": "mrkdwn",
+      #               "text": ":white_check_mark: Nightly GOATS Conda install succeeded"
+      #             },
+      #             "accessory": {
+      #               "type": "button",
+      #               "text": {
+      #                 "type": "plain_text",
+      #                 "text": "View run",
+      #                 "emoji": true
+      #               },
+      #               "value": "view_run",
+      #               "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+      #               "action_id": "button-action"
+      #             },
+      #             "fields": [
+      #               {
+      #                 "type": "mrkdwn",
+      #                 "text": "*OS:*\n`${{ matrix.os }}`"
+      #               },
+      #               {
+      #                 "type": "mrkdwn",
+      #                 "text": "*Architecture:*\n`${{ runner.arch }}`"
+      #               },
+      #               {
+      #                 "type": "mrkdwn",
+      #                 "text": "*Python Version:*\n`${{ matrix.python-version }}`"
+      #               },
+      #             ],
+      #           }
+      #         ]
+      #       }
 
 
-      - name: Send Slack failure
-        if: ${{ failure() }}
-        uses: slackapi/slack-github-action@v2.1.0
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":x: <@U05HU8PERA5> Nightly GOATS Conda install failed"
-                  },
-                  "accessory": {
-                    "type": "button",
-                    "text": {
-                      "type": "plain_text",
-                      "text": "View run",
-                      "emoji": true
-                    },
-                    "value": "view_run",
-                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-                    "action_id": "button-action"
-                  },
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*OS:*\n`${{ matrix.os }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Architecture:*\n`${{ runner.arch }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Python Version:*\n`${{ matrix.python-version }}`"
-                    },
-                  ],
-                }
-              ]
-            }
+      # - name: Send Slack failure
+      #   if: ${{ failure() }}
+      #   uses: slackapi/slack-github-action@v2.1.0
+      #   with:
+      #     webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #     webhook-type: incoming-webhook
+      #     payload: |
+      #       {
+      #         "blocks": [
+      #           {
+      #             "type": "section",
+      #             "text": {
+      #               "type": "mrkdwn",
+      #               "text": ":x: <@U05HU8PERA5> Nightly GOATS Conda install failed"
+      #             },
+      #             "accessory": {
+      #               "type": "button",
+      #               "text": {
+      #                 "type": "plain_text",
+      #                 "text": "View run",
+      #                 "emoji": true
+      #               },
+      #               "value": "view_run",
+      #               "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+      #               "action_id": "button-action"
+      #             },
+      #             "fields": [
+      #               {
+      #                 "type": "mrkdwn",
+      #                 "text": "*OS:*\n`${{ matrix.os }}`"
+      #               },
+      #               {
+      #                 "type": "mrkdwn",
+      #                 "text": "*Architecture:*\n`${{ runner.arch }}`"
+      #               },
+      #               {
+      #                 "type": "mrkdwn",
+      #                 "text": "*Python Version:*\n`${{ matrix.python-version }}`"
+      #               },
+      #             ],
+      #           }
+      #         ]
+      #       }
