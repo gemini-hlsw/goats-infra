@@ -133,7 +133,7 @@ jobs:
           ls -Rl docs/gh_pages/conda
 
       - name: Index Conda channel
-        run: python -m conda_index --channeldata docs/gh_pages/conda
+        run: python -m conda_index --no-compact --channeldata docs/gh_pages/conda
 
       - name: Create pull request
         id: cpr
