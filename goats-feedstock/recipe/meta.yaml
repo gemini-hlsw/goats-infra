@@ -1,5 +1,5 @@
 {% set name = "goats" %}
-{% set version = "25.9.0" %}
+{% set version = "25.11.1" %}
 {% set python_min = "3.12" %}
 
 package:
@@ -8,7 +8,7 @@ package:
 
 source:
   url: https://github.com/gemini-hlsw/goats/archive/{{ version }}.tar.gz
-  sha256: 06e56c85e1af702f25653cb3994fa60a567cccd0dd117d80f204f48abf6d057a
+  sha256: 8a97895011c7da27606901dce7ae96107f73c7d56142e1b1292fef4c171a71d0
 
 build:
   entry_points:
@@ -24,13 +24,14 @@ requirements:
     - pip
   run:
     - python >={{ python_min }}
+    - apscheduler >=3.11.0,<4
     - astropy >=6.0,<7
-    - astroquery >=0.4.10
+    - astroquery >=0.4.11
     - channels_redis >=4.3.0,<5
     - channels >=4.0,<5
-    - click >=8.2.1,<9
-    - django >=4.2.23,<5
-    - django-cors-headers >=4.7.0,<5
+    - click >=8.3.0,<9
+    - django >=4.2.24,<5
+    - django-cors-headers >=4.9.0,<5
     - django-dramatiq >=0.14.0
     - djangorestframework >=3.16.1,<4
     - dramatiq-abort >=1.2.1
@@ -38,19 +39,20 @@ requirements:
     - marshmallow >=3.26.1,<4
     - marshmallow-jsonapi >=0.24.0
     - numpydoc >=1.9.0,<2
-    - tomtoolkit =2.26.0
+    - tomtoolkit =2.26.2
     - dragons =4.0.0
     - redis-server >=7.4.0,<8
     - daphne >=4.2.0,<5
     - watchdog >=6.0.0,<7
     - redis-py >=6.2.0,<7
-    - gpp-client =25.8.2
-    - tom-tns >=0.3.1
+    - gpp-client =25.10.4
+    - tom-tns >=0.3.2
 
 test:
   imports:
     - goats_tom
     - goats_cli
+    - goats_common
     - goats_setup
   commands:
     - pip check
