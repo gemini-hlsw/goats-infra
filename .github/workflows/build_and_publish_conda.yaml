@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-13] # macos-13 = Intel-based runner.
+        os: [ubuntu-latest, macos-15-intel] # macos-13 = Intel-based runner.
         python-version: ["3.12"]
     runs-on: ${{ matrix.os }}
     needs: metadata
