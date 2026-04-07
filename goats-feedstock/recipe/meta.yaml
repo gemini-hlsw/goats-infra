@@ -1,5 +1,5 @@
 {% set name = "goats" %}
-{% set version = "26.3.0" %}
+{% set version = "26.4.1rc1" %}
 {% set python_min = "3.12" %}
 
 package:
@@ -8,7 +8,7 @@ package:
 
 source:
   url: https://github.com/gemini-hlsw/goats/archive/{{ version }}.tar.gz
-  sha256: ff42ad325476fe7a3fe58512182c24fa28cbee9bef809a7cc2f795595e62628c
+  sha256: b5c896b3673a668982fc4451d1c791ce2748c0fe0c07e4f56f337a577e315882
 
 build:
   entry_points:
@@ -25,7 +25,7 @@ requirements:
   run:
     - python >={{ python_min }}
     - apscheduler >=3.11.2,<4
-    - astropy >=6.0,<7
+    - astropy >=7
     - astroquery >=0.4.11
     - channels_redis >=4.3.0,<5
     - channels >=4.0,<5
@@ -39,13 +39,13 @@ requirements:
     - marshmallow >=3.26.2,<4
     - marshmallow-jsonapi >=0.24.0
     - numpydoc >=1.9.0,<2
-    - tomtoolkit =2.29.0
-    - dragons =4.1.0
+    - tomtoolkit ==2.31.6
+    - dragons ==4.2.0
     - redis-server >=7.4.0,<8
     - daphne >=4.2.0,<5
     - watchdog >=6.0.0,<7
     - redis-py >=6.2.0,<7
-    - gpp-client =26.3.0
+    - gpp-client ==26.3.0
     - tom-tns >=0.3.4
 test:
   imports:
