@@ -1,5 +1,5 @@
 {% set name = "goats" %}
-{% set version = "26.4.1rc2" %}
+{% set version = "26.4.1" %}
 {% set python_min = "3.12" %}
 
 package:
@@ -8,7 +8,7 @@ package:
 
 source:
   url: https://github.com/gemini-hlsw/goats/archive/{{ version }}.tar.gz
-  sha256: 05282926f1e9c4a8dc05e426aaf93d47a161684726b4d8d6d408e80d3405615a
+  sha256: bd2fca4df79eb48db566847cc742ca41547cf5867cfeee5bb3f543bd3e400ab8
 
 build:
   entry_points:
@@ -40,7 +40,7 @@ requirements:
     - marshmallow-jsonapi >=0.24.0
     - numpydoc >=1.9.0,<2
     - tomtoolkit =2.31.6=pyhd8ed1ab_1
-    - dragons ==4.2.0
+    - dragons ==4.1.0
     - redis-server >=7.4.0,<8
     - daphne >=4.2.0,<5
     - watchdog >=6.0.0,<7
