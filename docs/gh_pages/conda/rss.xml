@@ -4,15 +4,15 @@
     <title>anaconda.org/conda</title>
     <link>https://conda.anaconda.org/conda</link>
     <description>The most recent 1 updates for conda.</description>
-    <pubDate>Fri, 07 Nov 2025 23:21:50 GMT</pubDate>
-    <lastBuildDate>Fri, 07 Nov 2025 23:21:50 GMT</lastBuildDate>
+    <pubDate>Fri, 10 Apr 2026 21:04:11 GMT</pubDate>
+    <lastBuildDate>Fri, 10 Apr 2026 21:04:11 GMT</lastBuildDate>
     <item>
-      <title>goats 25.11.3 [linux-64, osx-64]</title>
+      <title>goats 26.4.2 [linux-64, osx-64]</title>
       <description>Gemini Observation and Analysis of Targets System.</description>
-      <link>https://goats.readthedocs.io/en/25.11.3/</link>
+      <link>https://goats.readthedocs.io/en/26.4.2/</link>
       <comments>https://github.com/gemini-hlsw/goats</comments>
-      <guid>https://github.com/gemini-hlsw/goats/archive/25.11.3.tar.gz</guid>
-      <pubDate>Thu, 11 Sep 2025 08:17:56 GMT</pubDate>
+      <guid>https://github.com/gemini-hlsw/goats/archive/26.4.2.tar.gz</guid>
+      <pubDate>Fri, 10 Apr 2026 20:54:48 GMT</pubDate>
       <source>https://github.com/gemini-hlsw/goats</source>
     </item>
   </channel>
