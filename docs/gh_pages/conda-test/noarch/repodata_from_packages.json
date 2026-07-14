@@ -4,6 +4,23 @@
   },
   "packages": {},
   "packages.conda": {
+    "ipygoldenlayout-0.4.0-py_0.conda": {
+      "build": "py_0",
+      "build_number": 0,
+      "depends": [
+        "ipyvue >=1.5,<2",
+        "python >=3.12"
+      ],
+      "license": "MIT",
+      "md5": "bb55b6706204c9c75d1b14667731c8b1",
+      "name": "ipygoldenlayout",
+      "noarch": "python",
+      "sha256": "eb872d257584e26345a22dd8bce33e0262a35ad030a1ee1472f951f5cb63c1f5",
+      "size": 348308,
+      "subdir": "noarch",
+      "timestamp": 1784059197743,
+      "version": "0.4.0"
+    },
     "ipysplitpanes-0.2.0-py_0.conda": {
       "build": "py_0",
       "build_number": 0,
