@@ -1,8 +1,19 @@
-name: Build and publish Conda packages
+name: Build and publish dependency Conda packages
 
 on:
   workflow_dispatch:
     inputs:
+      feedstock:
+        description: Feedstock to build
+        required: true
+        type: choice
+        options:
+          - ipysplitpanes
+          - ipygoldenlayout
+          - ipyvuedraggable
+          - ipypopout
+          - stdatamodels
+          - jdaviz
       channel:
         description: Target channel (test first, then promote)
         required: true
@@ -31,11 +42,10 @@ jobs:
           sudo apt-get update && sudo apt-get install -y yq jq
           pip install jinja2-cli
 
-
       - name: Render meta.yaml and extract info
         id: metadata
         run: |
-          jinja2 goats-feedstock/recipe/meta.yaml > ${{ runner.temp }}/rendered.yaml
+          jinja2 dependency-feedstocks/${{ inputs.feedstock }}-feedstock/recipe/meta.yaml > ${{ runner.temp }}/rendered.yaml
           name=$(yq -r '.package.name' ${{ runner.temp }}/rendered.yaml)
           version=$(yq -r '.package.version' ${{ runner.temp }}/rendered.yaml)
           build=$(yq -r '.build.number' ${{ runner.temp }}/rendered.yaml)
@@ -47,13 +57,10 @@ jobs:
           echo "source=$source" >> "$GITHUB_OUTPUT"
 
   build:
-    name: Conda build (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-15-intel] # macos-13 = Intel-based runner.
-        python-version: ["3.12"]
-    runs-on: ${{ matrix.os }}
+    # All dependency feedstocks are noarch: python, so a single Linux build
+    # covers every platform.
+    name: Conda build (noarch)
+    runs-on: ubuntu-latest
     needs: metadata
     defaults:
       run:
@@ -68,9 +75,9 @@ jobs:
         with:
           auto-update-conda: true
           miniforge-version: latest
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
           auto-activate-base: true
-          channels: conda-forge, http://astroconda.gemini.edu/public
+          channels: conda-forge
           channel-priority: strict
           conda-remove-defaults: "true"
 
@@ -83,12 +90,14 @@ jobs:
       - name: Create output folder
         run: mkdir -p ${{ runner.temp }}/conda-artifacts
 
+      # The test channel is included so feedstocks that depend on each other
+      # (e.g. jdaviz -> ipysplitpanes) can resolve packages published there
+      # before they are promoted to the main channel.
       - name: Build recipe
         run: |
-          conda build goats-feedstock/recipe \
+          conda build dependency-feedstocks/${{ inputs.feedstock }}-feedstock/recipe \
             --output-folder ${{ runner.temp }}/conda-artifacts \
             --channel conda-forge \
-            --channel http://astroconda.gemini.edu/public \
             --channel https://gemini-hlsw.github.io/goats-infra/conda-test \
             --channel https://gemini-hlsw.github.io/goats-infra/conda \
             --override-channels \
@@ -97,19 +106,14 @@ jobs:
       - name: Upload built artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ runner.os }}-${{ runner.arch }}-${{ needs.metadata.outputs.version }}-${{ needs.metadata.outputs.build }}
+          name: noarch-${{ needs.metadata.outputs.name }}-${{ needs.metadata.outputs.version }}-${{ needs.metadata.outputs.build }}
           overwrite: true
           path: ${{ runner.temp }}/conda-artifacts
 
   publish:
     needs: [build, metadata]
     name: Publish conda packages
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.12"]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -el {0}
@@ -123,7 +127,7 @@ jobs:
         with:
           auto-update-conda: true
           miniforge-version: latest
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
           auto-activate-base: true
           channels: conda-forge
           channel-priority: strict
@@ -141,9 +145,8 @@ jobs:
 
       - name: Move built Conda packages into Conda channel
         run: |
-          mkdir -p docs/gh_pages/${{ inputs.channel }}/linux-64 docs/gh_pages/${{ inputs.channel }}/osx-64
-          cp ${{ runner.temp }}/linux-64/*.conda docs/gh_pages/${{ inputs.channel }}/linux-64
-          cp ${{ runner.temp }}/osx-64/*.conda docs/gh_pages/${{ inputs.channel }}/osx-64
+          mkdir -p docs/gh_pages/${{ inputs.channel }}/noarch
+          cp ${{ runner.temp }}/noarch/*.conda docs/gh_pages/${{ inputs.channel }}/noarch
           ls -Rl docs/gh_pages/${{ inputs.channel }}
 
       - name: Index Conda channel
@@ -158,7 +161,7 @@ jobs:
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
           branch: ${{ needs.metadata.outputs.name }}-${{ needs.metadata.outputs.version }}-${{ needs.metadata.outputs.build }}-${{ inputs.channel }}
-          title: Publish `goats-${{ needs.metadata.outputs.version }}-${{ needs.metadata.outputs.build }}` to `${{ inputs.channel }}`.
+          title: Publish `${{ needs.metadata.outputs.name }}-${{ needs.metadata.outputs.version }}-${{ needs.metadata.outputs.build }}` to `${{ inputs.channel }}`.
           body: |
             This PR publishes a new Conda package version to the `${{ inputs.channel }}` channel.
 
@@ -168,8 +171,7 @@ jobs:
             - **Source URL:** `${{ needs.metadata.outputs.source }}`
 
             The following platforms were built and included:
-            - `linux-64`
-            - `osx-64`
+            - `noarch`
 
             The Conda index has been updated and committed to `docs/gh_pages/${{ inputs.channel }}/`.
           reviewers: davner
