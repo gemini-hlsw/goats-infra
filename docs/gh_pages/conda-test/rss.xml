@@ -3,9 +3,17 @@
   <channel>
     <title>anaconda.org/conda-test</title>
     <link>https://conda.anaconda.org/conda-test</link>
-    <description>The most recent 1 updates for conda-test.</description>
-    <pubDate>Tue, 14 Jul 2026 19:50:11 GMT</pubDate>
-    <lastBuildDate>Tue, 14 Jul 2026 19:50:11 GMT</lastBuildDate>
+    <description>The most recent 2 updates for conda-test.</description>
+    <pubDate>Tue, 14 Jul 2026 20:01:00 GMT</pubDate>
+    <lastBuildDate>Tue, 14 Jul 2026 20:01:00 GMT</lastBuildDate>
+    <item>
+      <title>ipyvuedraggable 1.1.0 [noarch]</title>
+      <description>Jupyter widget for Vue.Draggable.</description>
+      <comments>https://github.com/mariobuikhuizen/ipyvuedraggable</comments>
+      <guid>https://pypi.org/packages/source/i/ipyvuedraggable/ipyvuedraggable-1.1.0.tar.gz</guid>
+      <pubDate>Tue, 14 Jul 2026 19:59:39 GMT</pubDate>
+      <source>https://github.com/mariobuikhuizen/ipyvuedraggable</source>
+    </item>
     <item>
       <title>ipysplitpanes 0.2.0 [noarch]</title>
       <description>IPyWidget wrapper for the SplitPanes Vue package.</description>

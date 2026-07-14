@@ -20,6 +20,23 @@
       "subdir": "noarch",
       "timestamp": 1784058527900,
       "version": "0.2.0"
+    },
+    "ipyvuedraggable-1.1.0-py_0.conda": {
+      "build": "py_0",
+      "build_number": 0,
+      "depends": [
+        "ipyvue >=1.0.0,<2",
+        "python >=3.12"
+      ],
+      "license": "MIT",
+      "md5": "7c95a3ea531751ee6e2d8c83816c5dcc",
+      "name": "ipyvuedraggable",
+      "noarch": "python",
+      "sha256": "f4dca8197b2a4c7c714da76254fc9bc1c04bc456108a7ba5352edf2631a482e7",
+      "size": 102248,
+      "subdir": "noarch",
+      "timestamp": 1784059179424,
+      "version": "1.1.0"
     }
   },
   "removed": [],
