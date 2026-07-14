@@ -3,9 +3,18 @@
   <channel>
     <title>anaconda.org/conda-test</title>
     <link>https://conda.anaconda.org/conda-test</link>
-    <description>The most recent 1 updates for conda-test.</description>
-    <pubDate>Tue, 14 Jul 2026 19:50:11 GMT</pubDate>
-    <lastBuildDate>Tue, 14 Jul 2026 19:50:11 GMT</lastBuildDate>
+    <description>The most recent 2 updates for conda-test.</description>
+    <pubDate>Tue, 14 Jul 2026 20:07:13 GMT</pubDate>
+    <lastBuildDate>Tue, 14 Jul 2026 20:07:13 GMT</lastBuildDate>
+    <item>
+      <title>stdatamodels 6.0.0 [noarch]</title>
+      <description>Core support for DataModel classes used in calibration pipelines.</description>
+      <link>https://stdatamodels.readthedocs.io/</link>
+      <comments>https://github.com/spacetelescope/stdatamodels</comments>
+      <guid>https://pypi.org/packages/source/s/stdatamodels/stdatamodels-6.0.0.tar.gz</guid>
+      <pubDate>Tue, 14 Jul 2026 20:05:14 GMT</pubDate>
+      <source>https://github.com/spacetelescope/stdatamodels</source>
+    </item>
     <item>
       <title>ipysplitpanes 0.2.0 [noarch]</title>
       <description>IPyWidget wrapper for the SplitPanes Vue package.</description>
