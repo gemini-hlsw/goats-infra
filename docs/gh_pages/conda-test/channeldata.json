@@ -1,6 +1,26 @@
 {
   "channeldata_version": 1,
   "packages": {
+    "ipygoldenlayout": {
+      "activate.d": false,
+      "binary_prefix": false,
+      "deactivate.d": false,
+      "dev_url": "https://github.com/nmearl/ipygoldenlayout",
+      "home": "https://github.com/nmearl/ipygoldenlayout",
+      "license": "MIT",
+      "post_link": false,
+      "pre_link": false,
+      "pre_unlink": false,
+      "run_exports": {},
+      "source_url": "https://pypi.org/packages/source/i/ipygoldenlayout/ipygoldenlayout-0.4.0.tar.gz",
+      "subdirs": [
+        "noarch"
+      ],
+      "summary": "IPyWidgets implementation of the GoldenLayout JS package.",
+      "text_prefix": false,
+      "timestamp": 1784059197,
+      "version": "0.4.0"
+    },
     "ipypopout": {
       "activate.d": false,
       "binary_prefix": false,
@@ -40,6 +60,26 @@
       "text_prefix": false,
       "timestamp": 1784058527,
       "version": "0.2.0"
+    },
+    "ipyvuedraggable": {
+      "activate.d": false,
+      "binary_prefix": false,
+      "deactivate.d": false,
+      "dev_url": "https://github.com/mariobuikhuizen/ipyvuedraggable",
+      "home": "https://github.com/mariobuikhuizen/ipyvuedraggable",
+      "license": "MIT",
+      "post_link": false,
+      "pre_link": false,
+      "pre_unlink": false,
+      "run_exports": {},
+      "source_url": "https://pypi.org/packages/source/i/ipyvuedraggable/ipyvuedraggable-1.1.0.tar.gz",
+      "subdirs": [
+        "noarch"
+      ],
+      "summary": "Jupyter widget for Vue.Draggable.",
+      "text_prefix": false,
+      "timestamp": 1784059179,
+      "version": "1.1.0"
     },
     "stdatamodels": {
       "activate.d": false,
