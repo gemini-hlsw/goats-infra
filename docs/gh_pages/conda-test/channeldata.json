@@ -1,6 +1,26 @@
 {
   "channeldata_version": 1,
   "packages": {
+    "ipypopout": {
+      "activate.d": false,
+      "binary_prefix": false,
+      "deactivate.d": false,
+      "dev_url": "https://github.com/widgetti/ipypopout",
+      "home": "https://github.com/widgetti/ipypopout",
+      "license": "MIT",
+      "post_link": false,
+      "pre_link": false,
+      "pre_unlink": false,
+      "run_exports": {},
+      "source_url": "https://pypi.org/packages/source/i/ipypopout/ipypopout-2.0.1.tar.gz",
+      "subdirs": [
+        "noarch"
+      ],
+      "summary": "Pop out ipywidgets into a separate browser window.",
+      "text_prefix": false,
+      "timestamp": 1784059480,
+      "version": "2.0.1"
+    },
     "ipysplitpanes": {
       "activate.d": false,
       "binary_prefix": false,

@@ -4,6 +4,24 @@
   },
   "packages": {},
   "packages.conda": {
+    "ipypopout-2.0.1-py_0.conda": {
+      "build": "py_0",
+      "build_number": 0,
+      "depends": [
+        "ipyvuetify >=1.7.0,<2",
+        "ipywidgets >=7.7",
+        "python >=3.12"
+      ],
+      "license": "MIT",
+      "md5": "3160139ac278e16a48f5ae0b2ea33e39",
+      "name": "ipypopout",
+      "noarch": "python",
+      "sha256": "88de58a6dd1b4015e32a2f47b8d99e40ab2de8b1444ac1e3d1c93aedf35b7ace",
+      "size": 11102,
+      "subdir": "noarch",
+      "timestamp": 1784059480513,
+      "version": "2.0.1"
+    },
     "ipysplitpanes-0.2.0-py_0.conda": {
       "build": "py_0",
       "build_number": 0,
