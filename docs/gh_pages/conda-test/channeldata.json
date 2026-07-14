@@ -21,6 +21,26 @@
       "timestamp": 1784059197,
       "version": "0.4.0"
     },
+    "ipypopout": {
+      "activate.d": false,
+      "binary_prefix": false,
+      "deactivate.d": false,
+      "dev_url": "https://github.com/widgetti/ipypopout",
+      "home": "https://github.com/widgetti/ipypopout",
+      "license": "MIT",
+      "post_link": false,
+      "pre_link": false,
+      "pre_unlink": false,
+      "run_exports": {},
+      "source_url": "https://pypi.org/packages/source/i/ipypopout/ipypopout-2.0.1.tar.gz",
+      "subdirs": [
+        "noarch"
+      ],
+      "summary": "Pop out ipywidgets into a separate browser window.",
+      "text_prefix": false,
+      "timestamp": 1784059480,
+      "version": "2.0.1"
+    },
     "ipysplitpanes": {
       "activate.d": false,
       "binary_prefix": false,
@@ -40,6 +60,47 @@
       "text_prefix": false,
       "timestamp": 1784058527,
       "version": "0.2.0"
+    },
+    "ipyvuedraggable": {
+      "activate.d": false,
+      "binary_prefix": false,
+      "deactivate.d": false,
+      "dev_url": "https://github.com/mariobuikhuizen/ipyvuedraggable",
+      "home": "https://github.com/mariobuikhuizen/ipyvuedraggable",
+      "license": "MIT",
+      "post_link": false,
+      "pre_link": false,
+      "pre_unlink": false,
+      "run_exports": {},
+      "source_url": "https://pypi.org/packages/source/i/ipyvuedraggable/ipyvuedraggable-1.1.0.tar.gz",
+      "subdirs": [
+        "noarch"
+      ],
+      "summary": "Jupyter widget for Vue.Draggable.",
+      "text_prefix": false,
+      "timestamp": 1784059179,
+      "version": "1.1.0"
+    },
+    "stdatamodels": {
+      "activate.d": false,
+      "binary_prefix": false,
+      "deactivate.d": false,
+      "dev_url": "https://github.com/spacetelescope/stdatamodels",
+      "doc_url": "https://stdatamodels.readthedocs.io/",
+      "home": "https://github.com/spacetelescope/stdatamodels",
+      "license": "BSD-3-Clause",
+      "post_link": false,
+      "pre_link": false,
+      "pre_unlink": false,
+      "run_exports": {},
+      "source_url": "https://pypi.org/packages/source/s/stdatamodels/stdatamodels-6.0.0.tar.gz",
+      "subdirs": [
+        "noarch"
+      ],
+      "summary": "Core support for DataModel classes used in calibration pipelines.",
+      "text_prefix": false,
+      "timestamp": 1784059514,
+      "version": "6.0.0"
     }
   },
   "subdirs": [

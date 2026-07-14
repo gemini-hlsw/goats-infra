@@ -3,9 +3,26 @@
   <channel>
     <title>anaconda.org/conda-test</title>
     <link>https://conda.anaconda.org/conda-test</link>
-    <description>The most recent 2 updates for conda-test.</description>
-    <pubDate>Tue, 14 Jul 2026 20:01:22 GMT</pubDate>
-    <lastBuildDate>Tue, 14 Jul 2026 20:01:22 GMT</lastBuildDate>
+    <description>The most recent 5 updates for conda-test.</description>
+    <pubDate>Tue, 14 Jul 2026 21:15:13 GMT</pubDate>
+    <lastBuildDate>Tue, 14 Jul 2026 21:15:13 GMT</lastBuildDate>
+    <item>
+      <title>stdatamodels 6.0.0 [noarch]</title>
+      <description>Core support for DataModel classes used in calibration pipelines.</description>
+      <link>https://stdatamodels.readthedocs.io/</link>
+      <comments>https://github.com/spacetelescope/stdatamodels</comments>
+      <guid>https://pypi.org/packages/source/s/stdatamodels/stdatamodels-6.0.0.tar.gz</guid>
+      <pubDate>Tue, 14 Jul 2026 20:05:14 GMT</pubDate>
+      <source>https://github.com/spacetelescope/stdatamodels</source>
+    </item>
+    <item>
+      <title>ipypopout 2.0.1 [noarch]</title>
+      <description>Pop out ipywidgets into a separate browser window.</description>
+      <comments>https://github.com/widgetti/ipypopout</comments>
+      <guid>https://pypi.org/packages/source/i/ipypopout/ipypopout-2.0.1.tar.gz</guid>
+      <pubDate>Tue, 14 Jul 2026 20:04:40 GMT</pubDate>
+      <source>https://github.com/widgetti/ipypopout</source>
+    </item>
     <item>
       <title>ipygoldenlayout 0.4.0 [noarch]</title>
       <description>IPyWidgets implementation of the GoldenLayout JS package.</description>
@@ -13,6 +30,14 @@
       <guid>https://pypi.org/packages/source/i/ipygoldenlayout/ipygoldenlayout-0.4.0.tar.gz</guid>
       <pubDate>Tue, 14 Jul 2026 19:59:57 GMT</pubDate>
       <source>https://github.com/nmearl/ipygoldenlayout</source>
+    </item>
+    <item>
+      <title>ipyvuedraggable 1.1.0 [noarch]</title>
+      <description>Jupyter widget for Vue.Draggable.</description>
+      <comments>https://github.com/mariobuikhuizen/ipyvuedraggable</comments>
+      <guid>https://pypi.org/packages/source/i/ipyvuedraggable/ipyvuedraggable-1.1.0.tar.gz</guid>
+      <pubDate>Tue, 14 Jul 2026 19:59:39 GMT</pubDate>
+      <source>https://github.com/mariobuikhuizen/ipyvuedraggable</source>
     </item>
     <item>
       <title>ipysplitpanes 0.2.0 [noarch]</title>
