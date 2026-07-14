@@ -1,0 +1,44 @@
+{% set name = "ipypopout" %}
+{% set version = "2.0.1" %}
+{% set python_min = "3.12" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: 74b5b23e1bf0446313e176f8d18ee5e86c4881cd89011055b4afe15296f00312
+
+build:
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  number: 0
+
+requirements:
+  host:
+    - python {{ python_min }}
+    - setuptools
+    - pip
+  run:
+    - python >={{ python_min }}
+    - ipywidgets >=7.7
+    - ipyvuetify >=1.7.0,<2
+
+test:
+  imports:
+    - ipypopout
+  requires:
+    - python {{ python_min }}
+
+about:
+  home: https://github.com/widgetti/ipypopout
+  summary: Pop out ipywidgets into a separate browser window.
+  license: MIT
+  license_file: LICENSE
+  dev_url: https://github.com/widgetti/ipypopout
+
+extra:
+  recipe-maintainers:
+    - davner
+    - soraisam

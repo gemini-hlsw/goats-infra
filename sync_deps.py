@@ -8,6 +8,11 @@ import tomllib
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
+# Dependencies declared in pyproject that must NOT be synced into the conda
+# recipe because they are not available on any conda channel. They are installed
+# via pip instead (e.g. by `goats install`). Names must be normalized.
+CONDA_EXCLUDED = {"jdaviz"}
+
 
 def normalize(name: str) -> str:
     return re.sub(r"[-\.]", "_", name).lower()
@@ -34,6 +39,9 @@ def load_dependencies(pyproject_path: Path) -> dict[str, str]:
         parsed = parse_dependency(dep)
         if parsed:
             name, constraint = parsed
+            if name in CONDA_EXCLUDED:
+                logger.info("  skipping (not on conda, installed via pip): %s", name)
+                continue
             result[name] = constraint
         else:
             logger.warning("  could not parse: %s", dep)
