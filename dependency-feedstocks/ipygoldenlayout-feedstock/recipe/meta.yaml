@@ -1,0 +1,45 @@
+{% set name = "ipygoldenlayout" %}
+{% set version = "0.4.0" %}
+{% set python_min = "3.12" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: e407001dee2b2dfc6d23580b545b8ae711f96246010857bbb708aacd08f9e8d6
+
+build:
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  number: 0
+
+requirements:
+  host:
+    - python {{ python_min }}
+    - setuptools
+    - pip
+  run:
+    - python >={{ python_min }}
+    - ipyvue >=1.5,<2
+
+test:
+  imports:
+    - ipygoldenlayout
+  requires:
+    - python {{ python_min }}
+
+about:
+  home: https://github.com/nmearl/ipygoldenlayout
+  summary: IPyWidgets implementation of the GoldenLayout JS package.
+  license: MIT
+  # The sdist does not ship the license text, so it is vendored in the recipe
+  # directory from the upstream repository.
+  license_file: LICENSE
+  dev_url: https://github.com/nmearl/ipygoldenlayout
+
+extra:
+  recipe-maintainers:
+    - davner
+    - soraisam
