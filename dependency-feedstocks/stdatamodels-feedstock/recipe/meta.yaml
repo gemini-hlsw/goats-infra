@@ -1,0 +1,51 @@
+{% set name = "stdatamodels" %}
+{% set version = "6.0.0" %}
+{% set python_min = "3.12" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: 6fa46b78b817fbd444a80ee8ee97c8a01bbb71d8f72c86982fc59aae99ac174a
+
+build:
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  number: 0
+
+requirements:
+  host:
+    - python {{ python_min }}
+    - setuptools >=61.2
+    - setuptools_scm >=3.4
+    - wheel
+    - pip
+  run:
+    - python >={{ python_min }}
+    - asdf >=3.3.0
+    - asdf-transform-schemas >=0.6.0
+    - asdf-astropy >=0.6.0
+    - numpy >=1.25
+    - astropy >=6.1
+    - gwcs >=0.26.1
+
+test:
+  imports:
+    - stdatamodels
+  requires:
+    - python {{ python_min }}
+
+about:
+  home: https://github.com/spacetelescope/stdatamodels
+  summary: Core support for DataModel classes used in calibration pipelines.
+  license: BSD-3-Clause
+  license_file: LICENSE
+  doc_url: https://stdatamodels.readthedocs.io/
+  dev_url: https://github.com/spacetelescope/stdatamodels
+
+extra:
+  recipe-maintainers:
+    - davner
+    - soraisam

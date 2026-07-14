@@ -1,0 +1,43 @@
+{% set name = "ipyvuedraggable" %}
+{% set version = "1.1.0" %}
+{% set python_min = "3.12" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  sha256: a704dfb6d0c27f11cc4d99854a785352df8a80332073e6886570397ecda7bcbd
+
+build:
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  number: 0
+
+requirements:
+  host:
+    - python {{ python_min }}
+    - setuptools
+    - pip
+  run:
+    - python >={{ python_min }}
+    - ipyvue >=1.0.0,<2
+
+test:
+  imports:
+    - ipyvuedraggable
+  requires:
+    - python {{ python_min }}
+
+about:
+  home: https://github.com/mariobuikhuizen/ipyvuedraggable
+  summary: Jupyter widget for Vue.Draggable.
+  license: MIT
+  license_file: LICENSE
+  dev_url: https://github.com/mariobuikhuizen/ipyvuedraggable
+
+extra:
+  recipe-maintainers:
+    - davner
+    - soraisam
