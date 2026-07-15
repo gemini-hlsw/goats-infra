@@ -1,6 +1,26 @@
 {
   "channeldata_version": 1,
   "packages": {
+    "ipygoldenlayout": {
+      "activate.d": false,
+      "binary_prefix": false,
+      "deactivate.d": false,
+      "dev_url": "https://github.com/nmearl/ipygoldenlayout",
+      "home": "https://github.com/nmearl/ipygoldenlayout",
+      "license": "MIT",
+      "post_link": false,
+      "pre_link": false,
+      "pre_unlink": false,
+      "run_exports": {},
+      "source_url": "https://pypi.org/packages/source/i/ipygoldenlayout/ipygoldenlayout-0.4.0.tar.gz",
+      "subdirs": [
+        "noarch"
+      ],
+      "summary": "IPyWidgets implementation of the GoldenLayout JS package.",
+      "text_prefix": false,
+      "timestamp": 1784131076,
+      "version": "0.4.0"
+    },
     "ipysplitpanes": {
       "activate.d": false,
       "binary_prefix": false,
