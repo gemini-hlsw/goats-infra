@@ -3,7 +3,25 @@
     "subdir": "noarch"
   },
   "packages": {},
-  "packages.conda": {},
+  "packages.conda": {
+    "ipysplitpanes-0.2.0-py_0.conda": {
+      "build": "py_0",
+      "build_number": 0,
+      "depends": [
+        "ipyvue >=1.5,<2",
+        "python >=3.12"
+      ],
+      "license": "MIT",
+      "md5": "dc7a17098e094f101e84d2afa88a8425",
+      "name": "ipysplitpanes",
+      "noarch": "python",
+      "sha256": "0e91a27700325b940dbc5980968520c8c718d5c239d2be23731f79ae8c4f048e",
+      "size": 99919,
+      "subdir": "noarch",
+      "timestamp": 1784130484903,
+      "version": "0.2.0"
+    }
+  },
   "removed": [],
   "repodata_version": 1
 }
