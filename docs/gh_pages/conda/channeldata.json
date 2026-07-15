@@ -22,6 +22,27 @@
       "text_prefix": true,
       "timestamp": 1776458840,
       "version": "26.4.6"
+    },
+    "jdaviz": {
+      "activate.d": false,
+      "binary_prefix": false,
+      "deactivate.d": false,
+      "dev_url": "https://github.com/spacetelescope/jdaviz",
+      "doc_url": "https://jdaviz.readthedocs.io/",
+      "home": "https://github.com/spacetelescope/jdaviz",
+      "license": "BSD-3-Clause",
+      "post_link": false,
+      "pre_link": false,
+      "pre_unlink": false,
+      "run_exports": {},
+      "source_url": "https://pypi.org/packages/source/j/jdaviz/jdaviz-5.0.2.tar.gz",
+      "subdirs": [
+        "noarch"
+      ],
+      "summary": "Astronomical data analysis visualization tools based on the Jupyter platform.",
+      "text_prefix": false,
+      "timestamp": 1784135023,
+      "version": "5.0.2"
     }
   },
   "subdirs": [
