@@ -11,7 +11,9 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
 
-def get_latest_release_and_sha(repo_url: str) -> tuple[str, str]:
+def get_latest_release_and_sha(
+    repo_url: str, allow_prerelease: bool = False
+) -> tuple[str, str]:
     """
     Get the latest release tag and SHA256 for a GitHub repository.
 
@@ -19,6 +21,9 @@ def get_latest_release_and_sha(repo_url: str) -> tuple[str, str]:
     ----------
     repo_url : str
         The URL of the GitHub repository.
+    allow_prerelease : bool
+        If ``True``, consider prereleases (e.g. release candidates) as well;
+        otherwise only the latest stable release is used.
 
     Returns
     -------
@@ -34,11 +39,20 @@ def get_latest_release_and_sha(repo_url: str) -> tuple[str, str]:
         raise ValueError("Invalid GitHub URL format.")
     owner, repo = parts[:2]
 
-    # Get latest release info.
-    api_url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
+    # Get latest release info. The "latest" endpoint never returns
+    # prereleases, so for those list the releases (newest first) instead.
+    if allow_prerelease:
+        api_url = f"https://api.github.com/repos/{owner}/{repo}/releases?per_page=1"
+    else:
+        api_url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
     response = requests.get(api_url, timeout=10)
     response.raise_for_status()
     data = response.json()
+    if allow_prerelease:
+        if not data:
+            logger.exception("No releases found for repository.")
+            raise ValueError("No releases found for repository.")
+        data = data[0]
     tag = data["tag_name"].lstrip("v")
     logger.info("Latest release tag: %s ", tag)
 
@@ -120,6 +134,13 @@ def main() -> None:
         help="Path to meta.yaml file (default: %(default)s)",
     )
     parser.add_argument(
+        "--pre",
+        "--allow-prerelease",
+        dest="allow_prerelease",
+        action="store_true",
+        help="Also consider prereleases (e.g. rc versions), not just stable releases",
+    )
+    parser.add_argument(
         "--print-only",
         "-p",
         action="store_true",
@@ -128,7 +149,9 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    version, sha256 = get_latest_release_and_sha(args.repo_url)
+    version, sha256 = get_latest_release_and_sha(
+        args.repo_url, allow_prerelease=args.allow_prerelease
+    )
 
     if args.print_only:
         return
