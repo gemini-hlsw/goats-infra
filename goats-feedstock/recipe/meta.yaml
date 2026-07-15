@@ -56,7 +56,6 @@ test:
     - goats_tom
     - goats_cli
     - goats_common
-    - goats_setup
   commands:
 #    - pip check
     - goats --help
