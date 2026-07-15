@@ -58,7 +58,7 @@
       ],
       "summary": "IPyWidget wrapper for the SplitPanes Vue package.",
       "text_prefix": false,
-      "timestamp": 1784130484,
+      "timestamp": 1784133170,
       "version": "0.2.0"
     },
     "ipyvuedraggable": {
