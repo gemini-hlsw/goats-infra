@@ -12,13 +12,13 @@
         "python >=3.12"
       ],
       "license": "MIT",
-      "md5": "739d2d60727832480bb5287c283b9dd1",
+      "md5": "2fae8920ab8bdf860b4554b3cf937dcd",
       "name": "ipysplitpanes",
       "noarch": "python",
-      "sha256": "0a8c9a5cbc90dce39b44242b0085adbcfcde9b8da414abd40822265809664641",
-      "size": 99789,
+      "sha256": "24b5ce0e6605e4862f31499e88ac99eff5da0ce10b3997f924c1ca074d2b9597",
+      "size": 100064,
       "subdir": "noarch",
-      "timestamp": 1784128992281,
+      "timestamp": 1784129336123,
       "version": "0.2.0"
     }
   },
