@@ -3,7 +3,77 @@
     "subdir": "noarch"
   },
   "packages": {},
-  "packages.conda": {},
+  "packages.conda": {
+    "ipygoldenlayout-0.4.0-py_0.conda": {
+      "build": "py_0",
+      "build_number": 0,
+      "depends": [
+        "ipyvue >=1.5,<2",
+        "python >=3.12"
+      ],
+      "license": "MIT",
+      "md5": "f8a9d0bf783b13cdf167585946107cb0",
+      "name": "ipygoldenlayout",
+      "noarch": "python",
+      "sha256": "91d53ea19fd7170a38fde66821d3eed2267e5139550d1c2f0f3daae8ecc82880",
+      "size": 348151,
+      "subdir": "noarch",
+      "timestamp": 1784131076314,
+      "version": "0.4.0"
+    },
+    "ipypopout-2.0.1-py_0.conda": {
+      "build": "py_0",
+      "build_number": 0,
+      "depends": [
+        "ipyvuetify >=1.7.0,<2",
+        "ipywidgets >=7.7",
+        "python >=3.12"
+      ],
+      "license": "MIT",
+      "md5": "834327f42c7c73759f6453e75ba4bfdb",
+      "name": "ipypopout",
+      "noarch": "python",
+      "sha256": "a8e9742f72b3c4f1c368480d848c8812e4508c3665a45912e5bf4299b2004ef8",
+      "size": 11106,
+      "subdir": "noarch",
+      "timestamp": 1784132786496,
+      "version": "2.0.1"
+    },
+    "ipysplitpanes-0.2.0-py_0.conda": {
+      "build": "py_0",
+      "build_number": 0,
+      "depends": [
+        "ipyvue >=1.5,<2",
+        "python >=3.12"
+      ],
+      "license": "MIT",
+      "md5": "bdabe74cb58a6b9daae20493b77e5c88",
+      "name": "ipysplitpanes",
+      "noarch": "python",
+      "sha256": "9a4274b22cc8237c5fd1a998ae1f7ea8b991de59255fb928e4a9989c8ad28134",
+      "size": 99631,
+      "subdir": "noarch",
+      "timestamp": 1784133170760,
+      "version": "0.2.0"
+    },
+    "ipyvuedraggable-1.1.0-py_0.conda": {
+      "build": "py_0",
+      "build_number": 0,
+      "depends": [
+        "ipyvue >=1.0.0,<2",
+        "python >=3.12"
+      ],
+      "license": "MIT",
+      "md5": "f442d092c41b4ba76742ff85763ade7c",
+      "name": "ipyvuedraggable",
+      "noarch": "python",
+      "sha256": "59ae23369031087464a291d802c3f3e9a2c1c0f7b11b5eb93697c90cb0d05630",
+      "size": 102893,
+      "subdir": "noarch",
+      "timestamp": 1784131383368,
+      "version": "1.1.0"
+    }
+  },
   "removed": [],
   "repodata_version": 1
 }
