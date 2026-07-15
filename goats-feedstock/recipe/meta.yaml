@@ -1,5 +1,5 @@
 {% set name = "goats" %}
-{% set version = "26.4.6" %}
+{% set version = "26.8.0rc1" %}
 {% set python_min = "3.12" %}
 
 package:
@@ -8,7 +8,7 @@ package:
 
 source:
   url: https://github.com/gemini-hlsw/goats/archive/{{ version }}.tar.gz
-  sha256: 5ab611cdb6804e91ef89fcb11cb4809aa9e69bc95d843a23a5e93a9b85d141e5
+  sha256: df4ab7edfcd03c2aef7215a81a8667ab5d6ecb1be24cec761439f1e0242f61c6
 
 build:
   entry_points:
@@ -30,24 +30,27 @@ requirements:
     - channels_redis >=4.3.0,<5
     - channels >=4.0,<5
     - click >=8.3.1,<9
-    - django ==4.2.30,<5
+    - django >=5,<6
     - django-cors-headers >=4.9.0,<5
     - django-dramatiq >=0.15.0
     - django-crispy-forms <2.6
     - djangorestframework >=3.16.1,<4
     - dramatiq-abort >=1.2.1
     - dramatiq >=1.18.0,<2
-    - marshmallow ==3.26.1
+    - marshmallow ==3.26.2
     - marshmallow-jsonapi >=0.24.0
     - numpydoc >=1.9.0,<2
-    - tomtoolkit ==2.31.6
-    - dragons ==4.1.0
+    - tomtoolkit ==2.32.2
+    - dragons ==4.2.2
     - redis-server >=7.4.0,<8
     - daphne >=4.2.0,<5
     - watchdog >=6.0.0,<7
     - redis-py >=6.2.0,<7
-    - gpp-client ==26.4.0
+    - gpp-client ==26.5.0
     - tom-tns >=0.3.4
+    - copier >=9.14.1
+    - typer >=0.19.2
+    - whitenoise >=6.6.0,<7
 test:
   imports:
     - goats_tom
