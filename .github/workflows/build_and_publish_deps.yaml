@@ -176,6 +176,6 @@ jobs:
             - `noarch`
 
             The Conda index has been updated and committed to `docs/gh_pages/${{ inputs.channel }}/`.
-          reviewers: davner
-          assignees: davner
+          reviewers: miguelgomezgomez
+          assignees: miguelgomezgomez
           commit-message: "Publish ${{ needs.metadata.outputs.name }}-${{ needs.metadata.outputs.version }}-${{ needs.metadata.outputs.build }} to ${{ inputs.channel }}."
