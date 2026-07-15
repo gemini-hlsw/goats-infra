@@ -47,13 +47,13 @@
         "python >=3.12"
       ],
       "license": "MIT",
-      "md5": "dc7a17098e094f101e84d2afa88a8425",
+      "md5": "bdabe74cb58a6b9daae20493b77e5c88",
       "name": "ipysplitpanes",
       "noarch": "python",
-      "sha256": "0e91a27700325b940dbc5980968520c8c718d5c239d2be23731f79ae8c4f048e",
-      "size": 99919,
+      "sha256": "9a4274b22cc8237c5fd1a998ae1f7ea8b991de59255fb928e4a9989c8ad28134",
+      "size": 99631,
       "subdir": "noarch",
-      "timestamp": 1784130484903,
+      "timestamp": 1784133170760,
       "version": "0.2.0"
     },
     "ipyvuedraggable-1.1.0-py_0.conda": {
