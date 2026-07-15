@@ -1,0 +1,87 @@
+name: Promote Conda package to production
+
+# Copies already-built .conda artifacts from the conda-test channel into the
+# production channel and reindexes it -- the exact bytes that were tested are
+# promoted, nothing is rebuilt.
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package name to promote (e.g. jdaviz, goats)
+        required: true
+        type: string
+      version:
+        description: Version to promote (e.g. 5.0.2)
+        required: true
+        type: string
+
+jobs:
+  promote:
+    name: Promote ${{ inputs.package }}-${{ inputs.version }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Copy packages from conda-test to conda
+        run: |
+          shopt -s nullglob
+          found=0
+          for subdir in noarch linux-64 osx-64; do
+            src=docs/gh_pages/conda-test/$subdir
+            dst=docs/gh_pages/conda/$subdir
+            for f in "$src"/${{ inputs.package }}-${{ inputs.version }}-*.conda; do
+              mkdir -p "$dst"
+              cp -v "$f" "$dst/"
+              found=1
+            done
+          done
+          if [ "$found" -eq 0 ]; then
+            echo "::error::No ${{ inputs.package }}-${{ inputs.version }}-*.conda found in the conda-test channel. Publish it there first."
+            exit 1
+          fi
+
+      - name: Set up Miniforge
+        uses: conda-incubator/setup-miniconda@v4
+        with:
+          auto-update-conda: true
+          miniforge-version: latest
+          python-version: "3.12"
+          auto-activate: true
+          channels: conda-forge
+          channel-priority: strict
+          conda-remove-defaults: "true"
+
+      - name: Install index tools
+        run: |
+          conda install -y conda-index
+
+      - name: Index Conda channel
+        run: python -m conda_index --no-compact --channeldata docs/gh_pages/conda
+
+      - name: Create pull request
+        id: cpr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          add-paths: |
+            docs/gh_pages/conda
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+          branch: promote-${{ inputs.package }}-${{ inputs.version }}
+          title: Promote `${{ inputs.package }}-${{ inputs.version }}` to production.
+          body: |
+            This PR promotes a Conda package from the `conda-test` channel to the
+            production `conda` channel. The artifacts are the exact files that
+            were built and tested for `conda-test` -- nothing was rebuilt.
+
+            - **Package:** `${{ inputs.package }}`
+            - **Version:** `${{ inputs.version }}`
+
+            The production Conda index has been updated in `docs/gh_pages/conda/`.
+          reviewers: miguelgomezgomez
+          assignees: miguelgomezgomez
+          commit-message: "Promote ${{ inputs.package }}-${{ inputs.version }} to conda."

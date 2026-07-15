@@ -26,8 +26,13 @@ adding the package to one of the GitHub Pages channels:
 - **Test:** `https://gemini-hlsw.github.io/goats-infra/conda-test` (default)
 - **Production:** `https://gemini-hlsw.github.io/goats-infra/conda`
 
-Publish to `conda-test` first, verify the install, then re-run the workflow
-targeting `conda` to promote.
+Publish to `conda-test` first and verify the install. To promote, run the
+[`promote_conda_package.yaml`](../.github/workflows/promote_conda_package.yaml)
+workflow with the package name and version: it copies the already-built (and
+already-tested) `.conda` artifacts from `conda-test` into the production
+channel and reindexes it -- nothing is rebuilt. (Re-running the build workflow
+with `channel: conda` also works, but rebuilds from the recipe instead of
+promoting the tested artifacts.)
 
 ### Order matters
 
