@@ -3,7 +3,51 @@
     "subdir": "linux-64"
   },
   "packages": {},
-  "packages.conda": {},
+  "packages.conda": {
+    "goats-26.8.0rc1-py312_0.conda": {
+      "build": "py312_0",
+      "build_number": 0,
+      "depends": [
+        "apscheduler >=3.11.2,<4",
+        "astropy >=7",
+        "astroquery >=0.4.11",
+        "channels >=4.0,<5",
+        "channels_redis >=4.3.0,<5",
+        "click >=8.3.1,<9",
+        "copier >=9.14.1",
+        "daphne >=4.2.0,<5",
+        "django >=5,<6",
+        "django-cors-headers >=4.9.0,<5",
+        "django-crispy-forms <2.6",
+        "django-dramatiq >=0.15.0",
+        "djangorestframework >=3.16.1,<4",
+        "dragons 4.2.2",
+        "dramatiq >=1.18.0,<2",
+        "dramatiq-abort >=1.2.1",
+        "gpp-client 26.5.0",
+        "marshmallow 3.26.2",
+        "marshmallow-jsonapi >=0.24.0",
+        "numpydoc >=1.9.0,<2",
+        "python >=3.12,<3.13.0a0",
+        "python_abi 3.12.* *_cp312",
+        "redis-py >=6.2.0,<7",
+        "redis-server >=7.4.0,<8",
+        "tom-tns >=0.3.4",
+        "tomtoolkit 2.32.2",
+        "typer >=0.19.2",
+        "watchdog >=6.0.0,<7",
+        "whitenoise >=6.6.0,<7"
+      ],
+      "license": "CC0-1.0 AND BSD-3-Clause",
+      "md5": "43235e995e6c3a781746ace907068995",
+      "name": "goats",
+      "sha256": "45412650ff8e2d25ba2cc44a1533507f2cf3614938c1a1126b0c03ab6ba786e5",
+      "size": 6938485,
+      "subdir": "linux-64",
+      "timestamp": 1784143555610,
+      "version": "26.8.0rc1"
+    }
+  },
   "removed": [],
   "repodata_version": 1
 }
