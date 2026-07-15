@@ -90,16 +90,18 @@ jobs:
       - name: Create output folder
         run: mkdir -p ${{ runner.temp }}/conda-artifacts
 
-      # The test channel is included so feedstocks that depend on each other
-      # (e.g. jdaviz -> ipysplitpanes) can resolve packages published there
-      # before they are promoted to the main channel.
+      # The goats-infra channels go before conda-forge: with strict channel
+      # priority, the first channel that carries a package name wins, and our
+      # packages must shadow conda-forge's (e.g. ipyvuedraggable 1.0.0 there
+      # vs. our 1.1.0). The target channel goes first so builds aimed at
+      # production never resolve against test-only packages.
       - name: Build recipe
         run: |
           conda build dependency-feedstocks/${{ inputs.feedstock }}-feedstock/recipe \
             --output-folder ${{ runner.temp }}/conda-artifacts \
-            --channel conda-forge \
-            --channel https://gemini-hlsw.github.io/goats-infra/conda-test \
+            --channel https://gemini-hlsw.github.io/goats-infra/${{ inputs.channel }} \
             --channel https://gemini-hlsw.github.io/goats-infra/conda \
+            --channel conda-forge \
             --override-channels \
             --no-anaconda-upload
 

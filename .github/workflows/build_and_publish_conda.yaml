@@ -83,14 +83,18 @@ jobs:
       - name: Create output folder
         run: mkdir -p ${{ runner.temp }}/conda-artifacts
 
+      # goats-infra channels go before conda-forge: with strict channel
+      # priority they must shadow conda-forge for the packages we override
+      # (e.g. ipyvuedraggable). The target channel goes first so builds aimed
+      # at production never resolve against test-only packages.
       - name: Build recipe
         run: |
           conda build goats-feedstock/recipe \
             --output-folder ${{ runner.temp }}/conda-artifacts \
+            --channel https://gemini-hlsw.github.io/goats-infra/${{ inputs.channel }} \
+            --channel https://gemini-hlsw.github.io/goats-infra/conda \
             --channel conda-forge \
             --channel http://astroconda.gemini.edu/public \
-            --channel https://gemini-hlsw.github.io/goats-infra/conda-test \
-            --channel https://gemini-hlsw.github.io/goats-infra/conda \
             --override-channels \
             --no-anaconda-upload
 
