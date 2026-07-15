@@ -21,6 +21,24 @@
       "timestamp": 1784131076314,
       "version": "0.4.0"
     },
+    "ipypopout-2.0.1-py_0.conda": {
+      "build": "py_0",
+      "build_number": 0,
+      "depends": [
+        "ipyvuetify >=1.7.0,<2",
+        "ipywidgets >=7.7",
+        "python >=3.12"
+      ],
+      "license": "MIT",
+      "md5": "834327f42c7c73759f6453e75ba4bfdb",
+      "name": "ipypopout",
+      "noarch": "python",
+      "sha256": "a8e9742f72b3c4f1c368480d848c8812e4508c3665a45912e5bf4299b2004ef8",
+      "size": 11106,
+      "subdir": "noarch",
+      "timestamp": 1784132786496,
+      "version": "2.0.1"
+    },
     "ipysplitpanes-0.2.0-py_0.conda": {
       "build": "py_0",
       "build_number": 0,
