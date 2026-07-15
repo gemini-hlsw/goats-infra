@@ -72,6 +72,28 @@
       "subdir": "noarch",
       "timestamp": 1784131383368,
       "version": "1.1.0"
+    },
+    "stdatamodels-6.0.0-py_0.conda": {
+      "build": "py_0",
+      "build_number": 0,
+      "depends": [
+        "asdf >=3.3.0",
+        "asdf-astropy >=0.6.0",
+        "asdf-transform-schemas >=0.6.0",
+        "astropy >=6.1",
+        "gwcs >=0.26.1",
+        "numpy >=1.25",
+        "python >=3.12"
+      ],
+      "license": "BSD-3-Clause",
+      "md5": "60b5400930cd0db5941a68aa039d6eff",
+      "name": "stdatamodels",
+      "noarch": "python",
+      "sha256": "a80875489222c37843b7824d11ad5a400cbac4424cf3df972a1fd548589d813e",
+      "size": 166291,
+      "subdir": "noarch",
+      "timestamp": 1784134678035,
+      "version": "6.0.0"
     }
   },
   "removed": [],
