@@ -6,22 +6,22 @@
       "binary_prefix": false,
       "deactivate.d": false,
       "dev_url": "https://github.com/gemini-hlsw/goats",
-      "doc_url": "https://goats.readthedocs.io/en/26.8.0rc2/",
+      "doc_url": "https://goats.readthedocs.io/en/26.8.0rc3/",
       "home": "https://github.com/gemini-hlsw/goats",
       "license": "CC0-1.0 AND BSD-3-Clause",
       "post_link": false,
       "pre_link": false,
       "pre_unlink": false,
       "run_exports": {},
-      "source_url": "https://github.com/gemini-hlsw/goats/archive/26.8.0rc2.tar.gz",
+      "source_url": "https://github.com/gemini-hlsw/goats/archive/26.8.0rc3.tar.gz",
       "subdirs": [
         "linux-64",
         "osx-64"
       ],
       "summary": "Gemini Observation and Analysis of Targets System.",
       "text_prefix": true,
-      "timestamp": 1785438896,
-      "version": "26.8.0rc2"
+      "timestamp": 1785446748,
+      "version": "26.8.0rc3"
     },
     "ipygoldenlayout": {
       "activate.d": false,
