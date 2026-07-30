@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 # Dependencies declared in pyproject that must NOT be synced into the conda
 # recipe because they are not available on any conda channel. They are installed
 # via pip instead (e.g. by `goats install`). Names must be normalized.
-CONDA_EXCLUDED = {"jdaviz"}
+CONDA_EXCLUDED = {}
 
 
 def normalize(name: str) -> str:

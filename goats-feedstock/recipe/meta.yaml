@@ -1,5 +1,5 @@
 {% set name = "goats" %}
-{% set version = "26.8.0rc1" %}
+{% set version = "26.8.0rc2" %}
 {% set python_min = "3.12" %}
 
 package:
@@ -8,7 +8,7 @@ package:
 
 source:
   url: https://github.com/gemini-hlsw/goats/archive/{{ version }}.tar.gz
-  sha256: df4ab7edfcd03c2aef7215a81a8667ab5d6ecb1be24cec761439f1e0242f61c6
+  sha256: db9ada62833d430f73d75fd74f4b78174f0d10bb79515b85ae25d1c44fa31370
 
 build:
   entry_points:
