@@ -4,14 +4,14 @@
     <title>anaconda.org/conda-test</title>
     <link>https://conda.anaconda.org/conda-test</link>
     <description>The most recent 7 updates for conda-test.</description>
-    <pubDate>Thu, 30 Jul 2026 19:22:22 GMT</pubDate>
-    <lastBuildDate>Thu, 30 Jul 2026 19:22:22 GMT</lastBuildDate>
+    <pubDate>Fri, 16 Oct 2026 20:30:33 GMT</pubDate>
+    <lastBuildDate>Fri, 16 Oct 2026 20:30:33 GMT</lastBuildDate>
     <item>
-      <title>goats 26.8.0rc2 [linux-64, osx-64]</title>
+      <title>goats 26.10.1dev1 [linux-64, osx-64]</title>
       <description>Gemini Observation and Analysis of Targets System.</description>
-      <link>https://goats.readthedocs.io/en/26.8.0rc2/</link>
+      <link>https://goats.readthedocs.io/en/26.10.1dev1/</link>
       <comments>https://github.com/gemini-hlsw/goats</comments>
-      <guid>https://github.com/gemini-hlsw/goats/archive/26.8.0rc2.tar.gz</guid>
+      <guid>https://github.com/gemini-hlsw/goats/archive/26.10.1dev1.tar.gz</guid>
       <pubDate>Thu, 30 Jul 2026 19:14:56 GMT</pubDate>
       <source>https://github.com/gemini-hlsw/goats</source>
     </item>
