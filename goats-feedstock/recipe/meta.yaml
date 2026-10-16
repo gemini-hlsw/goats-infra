@@ -47,17 +47,20 @@ requirements:
     - watchdog >=6.0.0,<7
     - redis-py >=6.2.0,<7
     - gpp-client ==26.10.2
+    - jdaviz ==5.0.2
     - tom-tns >=0.3.4
     - copier >=9.14.1
     - typer >=0.19.2
     - whitenoise >=6.6.0,<7
 test:
+  files:
+    - pip_check.py
   imports:
     - goats_tom
     - goats_cli
     - goats_common
   commands:
-#    - pip check
+    - python pip_check.py
     - goats --help
   requires:
     - python {{ python_min }}
