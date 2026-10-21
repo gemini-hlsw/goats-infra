@@ -2,8 +2,26 @@ name: Test Conda Install
 
 on:
   workflow_dispatch:
+    inputs:
+      channel:
+        description: GOATS channel to install from
+        required: true
+        type: choice
+        default: conda
+        options:
+          - conda
+          - conda-test
+      version:
+        description: GOATS version to install, e.g. 26.10.1rc1 (empty for the latest)
+        required: false
+        type: string
   schedule:
     - cron: "0 0 * * 0" # Runs Sunday at midnight UTC.
+
+env:
+  # Scheduled runs have no inputs, so they test the latest release in conda.
+  GOATS_CHANNEL: ${{ inputs.channel || 'conda' }}
+  GOATS_VERSION: ${{ inputs.version }}
 
 jobs:
   build_conda_env:
@@ -30,18 +48,30 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
-          channels: https://gemini-hlsw.github.io/goats-infra/conda, http://astroconda.gemini.edu/public, conda-forge
+          channels: ${{ env.GOATS_CHANNEL == 'conda-test' && 'https://gemini-hlsw.github.io/goats-infra/conda-test, ' || '' }}https://gemini-hlsw.github.io/goats-infra/conda, http://astroconda.gemini.edu/public, conda-forge
           channel-priority: flexible
           conda-remove-defaults: "true"
           show-channel-urls: true
 
       - name: Install GOATS from Conda channel
-        run: conda install goats -y
+        run: |
+          conda install "goats${GOATS_VERSION:+==$GOATS_VERSION}" -y
+          conda list "^(goats|gpp-client)$"
 
-      - name: Run setup in CI mode
+      - name: Check gpp-client targets GPP production
+        run: |
+          python -c "from gpp_client.generated.package_environment import PACKAGE_ENVIRONMENT as env; print(env); assert env == 'PRODUCTION'"
+
+      - name: Run setup without prompts
         env:
           DJANGO_SUPERUSER_PASSWORD: changeme
-        run: goats install --ci
+        run: |
+          # goats 26.4 and older, still the latest in conda, only know --ci.
+          if goats install --help | grep -q -- "--headless-superuser"; then
+            goats install --headless-superuser
+          else
+            goats install --ci
+          fi
 
       - name: Send Slack success
         if: ${{ success() }}
@@ -56,7 +86,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":white_check_mark: Nightly GOATS Conda install succeeded"
+                    "text": ":white_check_mark: GOATS Conda install from `${{ env.GOATS_CHANNEL }}` succeeded"
                   },
                   "accessory": {
                     "type": "button",
@@ -101,7 +131,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":x: <@U05HU8PERA5> Nightly GOATS Conda install failed"
+                    "text": ":x: <@U05HU8PERA5> GOATS Conda install from `${{ env.GOATS_CHANNEL }}` failed"
                   },
                   "accessory": {
                     "type": "button",
