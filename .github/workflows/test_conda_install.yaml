@@ -149,7 +149,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":x: <@U05HU8PERA5> GOATS Conda install from `${{ env.GOATS_CHANNEL }}` failed"
+                    "text": ":x: <@U0538PY7RL0> GOATS Conda install from `${{ env.GOATS_CHANNEL }}` failed"
                   },
                   "accessory": {
                     "type": "button",
