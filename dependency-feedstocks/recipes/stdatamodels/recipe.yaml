@@ -1,0 +1,57 @@
+schema_version: 1
+
+context:
+  version: "6.0.0"
+
+package:
+  name: stdatamodels
+  version: ${{ version }}
+
+source:
+  url: https://pypi.org/packages/source/s/stdatamodels/stdatamodels-${{ version }}.tar.gz
+  sha256: 6fa46b78b817fbd444a80ee8ee97c8a01bbb71d8f72c86982fc59aae99ac174a
+
+build:
+  noarch: python
+  number: 0
+  script: ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+
+requirements:
+  host:
+    - python ${{ python_min }}.*
+    - setuptools >=61.2
+    - setuptools_scm >=3.4
+    - pip
+  run:
+    - python >=${{ python_min }}
+    - asdf >=3.3.0
+    - asdf-transform-schemas >=0.6.0
+    - asdf-astropy >=0.6.0
+    - numpy >=1.25
+    - astropy-base >=6.1
+    - gwcs >=0.26.1
+
+tests:
+  - python:
+      imports:
+        - stdatamodels
+      python_version:
+        - ${{ python_min }}.*
+        - "*"
+      pip_check: true
+
+about:
+  homepage: https://github.com/spacetelescope/stdatamodels
+  license: BSD-3-Clause
+  license_file: LICENSE
+  summary: Core support for DataModel classes used in calibration pipelines.
+  description: |
+    stdatamodels provides the DataModel base classes and ASDF schema support
+    shared by the JWST and Roman calibration pipelines, wrapping FITS and ASDF
+    files in validated, attribute-style Python objects.
+  repository: https://github.com/spacetelescope/stdatamodels
+  documentation: https://stdatamodels.readthedocs.io/
+
+extra:
+  recipe-maintainers:
+    - miguelgomezgomez

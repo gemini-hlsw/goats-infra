@@ -1,0 +1,4 @@
+# rattler-build variant config for every recipe in this folder.
+# conda-forge supplies python_min from its global pinning; we mirror it here.
+python_min:
+  - "3.11"

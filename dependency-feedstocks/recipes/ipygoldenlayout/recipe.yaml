@@ -1,0 +1,52 @@
+schema_version: 1
+
+context:
+  version: "0.4.0"
+
+package:
+  name: ipygoldenlayout
+  version: ${{ version }}
+
+source:
+  url: https://pypi.org/packages/source/i/ipygoldenlayout/ipygoldenlayout-${{ version }}.tar.gz
+  sha256: e407001dee2b2dfc6d23580b545b8ae711f96246010857bbb708aacd08f9e8d6
+
+build:
+  noarch: python
+  number: 0
+  script: ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+
+requirements:
+  host:
+    - python ${{ python_min }}.*
+    - setuptools
+    - pip
+  run:
+    - python >=${{ python_min }}
+    - ipyvue >=1.5,<2
+
+tests:
+  - python:
+      imports:
+        - ipygoldenlayout
+      python_version:
+        - ${{ python_min }}.*
+        - "*"
+      pip_check: true
+
+about:
+  homepage: https://github.com/nmearl/ipygoldenlayout
+  license: MIT
+  # The sdist ships no license text, so it is vendored in the recipe directory
+  # from the upstream repository.
+  license_file: LICENSE
+  summary: IPyWidgets implementation of the GoldenLayout JS package.
+  description: |
+    ipygoldenlayout wraps the GoldenLayout JavaScript layout manager as an
+    ipywidget, providing dockable, resizable and draggable panes for use in
+    Jupyter notebooks and other ipywidgets front-ends.
+  repository: https://github.com/nmearl/ipygoldenlayout
+
+extra:
+  recipe-maintainers:
+    - miguelgomezgomez

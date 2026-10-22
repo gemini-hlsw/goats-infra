@@ -1,0 +1,50 @@
+schema_version: 1
+
+context:
+  version: "1.1.0"
+
+package:
+  name: ipyvuedraggable
+  version: ${{ version }}
+
+source:
+  url: https://pypi.org/packages/source/i/ipyvuedraggable/ipyvuedraggable-${{ version }}.tar.gz
+  sha256: a704dfb6d0c27f11cc4d99854a785352df8a80332073e6886570397ecda7bcbd
+
+build:
+  noarch: python
+  number: 0
+  script: ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+
+requirements:
+  host:
+    - python ${{ python_min }}.*
+    - setuptools
+    - pip
+  run:
+    - python >=${{ python_min }}
+    - ipyvue >=1.0.0,<2
+
+tests:
+  - python:
+      imports:
+        - ipyvuedraggable
+      python_version:
+        - ${{ python_min }}.*
+        - "*"
+      pip_check: true
+
+about:
+  homepage: https://github.com/mariobuikhuizen/ipyvuedraggable
+  license: MIT
+  license_file: LICENSE
+  summary: Jupyter widget for Vue.Draggable.
+  description: |
+    ipyvuedraggable makes the Vue.Draggable component available as an
+    ipywidget, adding drag-and-drop sorting of lists and grids to ipyvue
+    based user interfaces.
+  repository: https://github.com/mariobuikhuizen/ipyvuedraggable
+
+extra:
+  recipe-maintainers:
+    - miguelgomezgomez

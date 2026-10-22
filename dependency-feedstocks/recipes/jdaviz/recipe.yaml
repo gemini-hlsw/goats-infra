@@ -1,0 +1,113 @@
+schema_version: 1
+
+context:
+  version: "5.0.2"
+
+package:
+  name: jdaviz
+  version: ${{ version }}
+
+source:
+  url: https://pypi.org/packages/source/j/jdaviz/jdaviz-${{ version }}.tar.gz
+  sha256: 5f9c22262a9069c17cd8310fa55a6a085fb9cda3e042ec42c9b8189569790b5f
+
+build:
+  noarch: python
+  number: 0
+  script: ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  python:
+    entry_points:
+      - jdaviz = jdaviz.cli:_main
+
+requirements:
+  host:
+    - python ${{ python_min }}.*
+    - setuptools >=61.2
+    - setuptools_scm
+    - pip
+  run:
+    - python >=${{ python_min }}
+    - packaging
+    - astropy-base >=6
+    - matplotlib-base >=3.6
+    - traitlets >=5.0.5
+    - bqplot >=0.12.45,<0.13
+    - glue-core >=1.24.0
+    - glue-jupyter >=0.27.0
+    - echo >=0.11.0
+    - ipykernel >=7.1.0
+    - ipyvue >=1.6
+    - ipyvuetify >=1.7.0,<3.0
+    - ipysplitpanes >=0.1.0
+    - ipygoldenlayout >=0.3.0
+    - ipywidgets >=8.0.6
+    - solara >=1.49.0
+    - pyyaml >=5.4.1
+    - specutils >=2.0.0
+    - specreduce >=1.6.0
+    - photutils >=2.2
+    - glue-astronomy >=0.12.0
+    - asteval >=0.9.23
+    - idna
+    - vispy >=0.6.5
+    - asdf >=2.14.3
+    - stdatamodels >=1.3
+    - gwcs >=0.16.1
+    - regions >=0.6
+    - scikit-image
+    - sidecar >=0.5.2
+    - ipypopout >=2.0.1
+    - astroquery
+    - requests
+    - nbclassic
+    - pyvo >=1.5.3
+    - s3fs >=2024.10.0
+    - joblib >=1.3.0
+    - ipyvuedraggable >=1.1.0
+    - spherical-geometry
+  run_constraints:
+    # dask < 2024 imports numpy.compat, removed in NumPy 2; conda metadata does not encode it.
+    - dask-core >=2025
+
+tests:
+  - python:
+      imports:
+        - jdaviz
+        - jdaviz.configs.specviz
+      python_version:
+        - ${{ python_min }}.*
+        - "*"
+      # Replaced by pip_check.py below, which tolerates known upstream bugs.
+      pip_check: false
+  - script:
+      - jdaviz --help
+      - python pip_check.py
+    files:
+      recipe:
+        - pip_check.py
+    requirements:
+      run:
+        - python ${{ python_min }}.*
+        - pip
+
+about:
+  homepage: https://jdaviz.readthedocs.io/
+  license: BSD-3-Clause
+  license_file:
+    - LICENSE.rst
+    - licenses/IPYFILECHOOSER_LICENSE.rst
+    - licenses/IMEXAM_LICENSE.txt
+    - licenses/GINGA_LICENSE.txt
+    - licenses/TEMPLATE_LICENCE.rst
+  summary: Astronomical data analysis visualization tools based on the Jupyter platform.
+  description: |
+    jdaviz is a package of astronomical data analysis visualization tools based
+    on the Jupyter platform. It bundles the Specviz, Cubeviz, Mosviz and Imviz
+    configurations used to explore JWST and other observatory data, either from
+    a notebook or from the standalone command line application.
+  repository: https://github.com/spacetelescope/jdaviz
+  documentation: https://jdaviz.readthedocs.io/
+
+extra:
+  recipe-maintainers:
+    - miguelgomezgomez

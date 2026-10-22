@@ -1,0 +1,52 @@
+schema_version: 1
+
+context:
+  version: "0.2.0"
+
+package:
+  name: ipysplitpanes
+  version: ${{ version }}
+
+source:
+  url: https://pypi.org/packages/source/i/ipysplitpanes/ipysplitpanes-${{ version }}.tar.gz
+  sha256: 3c9b4dcc256b8937c7e614006d43b3de8548aec2de51dae80aa7ceb331d3f664
+
+build:
+  noarch: python
+  number: 0
+  script: ${{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+
+requirements:
+  host:
+    - python ${{ python_min }}.*
+    - setuptools
+    - pip
+  run:
+    - python >=${{ python_min }}
+    - ipyvue >=1.5,<2
+
+tests:
+  - python:
+      imports:
+        - ipysplitpanes
+      python_version:
+        - ${{ python_min }}.*
+        - "*"
+      pip_check: true
+
+about:
+  homepage: https://github.com/nmearl/ipysplitpanes
+  license: MIT
+  # The sdist ships no license text, so it is vendored in the recipe directory
+  # from the upstream repository.
+  license_file: LICENSE
+  summary: IPyWidget wrapper for the SplitPanes Vue package.
+  description: |
+    ipysplitpanes exposes the splitpanes Vue component as an ipywidget,
+    allowing resizable split layouts to be composed from Python in Jupyter
+    notebooks and other ipywidgets front-ends.
+  repository: https://github.com/nmearl/ipysplitpanes
+
+extra:
+  recipe-maintainers:
+    - miguelgomezgomez
