@@ -13,10 +13,12 @@ on:
 env:
   CHANNEL_ROOT: https://gemini-hlsw.github.io/goats-infra
   ASTROCONDA: http://astroconda.gemini.edu/public
-  # astroconda times out now and then; let conda retry before giving up.
-  CONDA_REMOTE_MAX_RETRIES: "6"
+  # astroconda times out now and then; let conda retry a little. When a
+  # runner cannot reach it at all, the reachability checks below fail in a
+  # few minutes instead of letting conda retry for an hour.
+  CONDA_REMOTE_MAX_RETRIES: "3"
   CONDA_REMOTE_BACKOFF_FACTOR: "2"
-  CONDA_REMOTE_CONNECT_TIMEOUT_SECS: "30"
+  CONDA_REMOTE_CONNECT_TIMEOUT_SECS: "15"
   CONDA_REMOTE_READ_TIMEOUT_SECS: "120"
 
 # setup-miniconda turns on `set -eo pipefail` in login shells, and on Ubuntu
@@ -193,6 +195,18 @@ jobs:
         run: |
           conda install -y -n base conda-build conda-index
 
+      # Some runners cannot reach astroconda (http only) for a long while.
+      # Re-running the failed job usually lands on one that can.
+      - name: Check astroconda is reachable
+        env:
+          SUBDIR: ${{ runner.os == 'macOS' && 'osx-64' || 'linux-64' }}
+        run: |
+          curl -fsS -o /dev/null --connect-timeout 10 --retry 6 --retry-delay 20 --retry-all-errors \
+            "$ASTROCONDA/$SUBDIR/repodata.json" || {
+            echo "::error::This runner cannot reach astroconda. Re-run the failed jobs to get another runner."
+            exit 1
+          }
+
       - name: Create output folder
         run: mkdir -p ${{ runner.temp }}/conda-artifacts
 
@@ -261,6 +275,16 @@ jobs:
         run: |
           conda install -y -n base conda-index
           conda run -n base python -m conda_index "$RUNNER_TEMP/local-channel"
+
+      - name: Check astroconda is reachable
+        env:
+          SUBDIR: ${{ runner.os == 'macOS' && 'osx-64' || 'linux-64' }}
+        run: |
+          curl -fsS -o /dev/null --connect-timeout 10 --retry 6 --retry-delay 20 --retry-all-errors \
+            "$ASTROCONDA/$SUBDIR/repodata.json" || {
+            echo "::error::This runner cannot reach astroconda. Re-run the failed jobs to get another runner."
+            exit 1
+          }
 
       - name: Install GOATS
         env:

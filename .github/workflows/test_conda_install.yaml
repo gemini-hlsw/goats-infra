@@ -24,10 +24,11 @@ env:
   GOATS_VERSION: ${{ inputs.version }}
   CHANNEL_ROOT: https://gemini-hlsw.github.io/goats-infra
   ASTROCONDA: http://astroconda.gemini.edu/public
-  # astroconda times out now and then; let conda retry before giving up.
-  CONDA_REMOTE_MAX_RETRIES: "6"
+  # astroconda times out now and then; let conda retry a little before the
+  # install step's own retries take over.
+  CONDA_REMOTE_MAX_RETRIES: "3"
   CONDA_REMOTE_BACKOFF_FACTOR: "2"
-  CONDA_REMOTE_CONNECT_TIMEOUT_SECS: "30"
+  CONDA_REMOTE_CONNECT_TIMEOUT_SECS: "15"
   CONDA_REMOTE_READ_TIMEOUT_SECS: "120"
 
 # setup-miniconda turns on `set -eo pipefail` in login shells, and on Ubuntu
