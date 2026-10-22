@@ -1,0 +1,235 @@
+name: Prepare the GOATS recipe
+
+# Watches GOATS releases, so that shipping one only takes Build Release in
+# goats:
+#
+# - A new release candidate or final release: points the recipe at it
+#   (version, sha256 and dependencies from its pyproject.toml), commits that
+#   to main and starts build_and_publish_conda.yaml, which verifies, builds,
+#   tests and publishes it. Only a release published after the one in the
+#   recipe counts, so older releases are never built again.
+# - A new devN release: a light check that builds nothing and leaves main
+#   alone. The recipe must sync with its pyproject.toml, and its
+#   dependencies must resolve from our channels, astroconda and conda-forge
+#   the way users install. A gpp-client .devN pin stays out of that solve:
+#   only PyPI has it. Each dev is checked once.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: GOATS release to handle now, e.g. 26.11.0rc3 (empty for the newest ones)
+        required: false
+        type: string
+
+concurrency:
+  group: prepare-recipe
+  cancel-in-progress: false
+
+env:
+  GOATS_REPO: gemini-hlsw/goats
+  CHANNEL_ROOT: https://gemini-hlsw.github.io/goats-infra
+  ASTROCONDA: http://astroconda.gemini.edu/public
+  # astroconda times out now and then; let conda retry a little.
+  CONDA_REMOTE_MAX_RETRIES: "3"
+  CONDA_REMOTE_BACKOFF_FACTOR: "2"
+  CONDA_REMOTE_CONNECT_TIMEOUT_SECS: "15"
+  CONDA_REMOTE_READ_TIMEOUT_SECS: "120"
+
+# setup-miniconda turns on `set -eo pipefail` in login shells, and on Ubuntu
+# ~/.bash_logout then turns any explicit `exit` into status 1. Scripts that
+# succeed must end on their last command, never on `exit 0`.
+jobs:
+  find:
+    name: Find new GOATS releases
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.find.outputs.release }}
+      dev: ${{ steps.seen.outputs.cache-hit != 'true' && steps.find.outputs.dev || '' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: goats-feedstock
+          filter: blob:none
+
+      - name: Find the releases to handle
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          releases=$(gh release list -R "$GOATS_REPO" --exclude-drafts -L 50 --json tagName,publishedAt)
+          if [ -n "$VERSION" ]; then
+            if ! jq -e --arg v "$VERSION" 'any(.[]; .tagName == $v)' <<<"$releases" >/dev/null; then
+              echo "::error::goats $VERSION is not among the last 50 published releases."
+              exit 1
+            fi
+            release="" dev=""
+            if [[ "$VERSION" == *dev* ]]; then dev=$VERSION; else release=$VERSION; fi
+          else
+            newest() {
+              jq -r "[.[] | select(.tagName | test(\"dev\") | $1)] | max_by(.publishedAt) // {} | \"\(.tagName // \"-\") \(.publishedAt // \"-\")\"" <<<"$releases"
+            }
+            read -r release release_at <<<"$(newest 'not')"
+            read -r dev dev_at <<<"$(newest '.')"
+            current=$(grep -oP '\{%\s*set version\s*=\s*"\K[^"]+' goats-feedstock/recipe/meta.yaml)
+            current_at=$(jq -r --arg v "$current" '.[] | select(.tagName == $v) | .publishedAt' <<<"$releases")
+            # A dev older than the newest rc or final has nothing new to check.
+            if [ "$dev" = - ] || [[ "$dev_at" < "$release_at" ]]; then
+              dev=""
+            fi
+            if [ "$release" = - ] || [ "$release" = "$current" ] || [[ "$release_at" < "$current_at" ]]; then
+              release=""
+            fi
+            echo "The recipe points at goats $current."
+          fi
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "dev=$dev" >> "$GITHUB_OUTPUT"
+          echo "To build: ${release:-none}. To check: ${dev:-none}."
+
+      # Scheduled runs check each dev once; a run by hand always checks.
+      - name: Look for an earlier check of this dev
+        id: seen
+        if: steps.find.outputs.dev != '' && inputs.version == ''
+        uses: actions/cache/restore@v4
+        with:
+          path: .dev-checked
+          key: dev-checked-${{ steps.find.outputs.dev }}
+          lookup-only: true
+
+  update:
+    name: Point the recipe at goats ${{ needs.find.outputs.release }}
+    needs: find
+    if: needs.find.outputs.release != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    env:
+      RELEASE: ${{ needs.find.outputs.release }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            .github
+            goats-feedstock
+          filter: blob:none
+
+      - name: Update the recipe from the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pip install requests
+          python3 update_release_sha.py --version "$RELEASE"
+          curl -fsSL --retry 5 "https://github.com/$GOATS_REPO/archive/$RELEASE.tar.gz" \
+            | tar -xzO --wildcards '*/pyproject.toml' > "$RUNNER_TEMP/pyproject.toml"
+          python3 sync_deps.py --pyproject-path "$RUNNER_TEMP/pyproject.toml"
+          git diff
+
+      # Pushes made with GITHUB_TOKEN start no workflows; a dispatch does.
+      - name: Commit to main and start the build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -qam "Point the goats recipe at $RELEASE"
+          git push -q origin HEAD:main
+          gh workflow run build_and_publish_conda.yaml --repo "$GITHUB_REPOSITORY" --ref main
+
+      - name: Report to Slack
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/notify-slack
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          status: ${{ job.status == 'success' && 'info' || 'failure' }}
+          text: "${{ job.status == 'success' && format('goats {0} was released: the recipe points at it and the conda build has started.', env.RELEASE) || format('goats {0} was released, but updating the recipe failed.', env.RELEASE) }}"
+
+  check-dev:
+    name: Check goats ${{ needs.find.outputs.dev }} without building it
+    needs: find
+    if: needs.find.outputs.dev != ''
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    env:
+      DEV: ${{ needs.find.outputs.dev }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            .github
+            goats-feedstock
+          filter: blob:none
+
+      - name: Set up Miniforge
+        uses: conda-incubator/setup-miniconda@v4
+        with:
+          miniforge-version: latest
+          auto-activate: true
+          channels: conda-forge
+          conda-remove-defaults: "true"
+
+      # A runner that cannot reach astroconda says nothing about the release:
+      # fail without recording the check, and the next run tries again.
+      - name: Check astroconda is reachable
+        id: reach
+        run: |
+          curl -fsS -o /dev/null --connect-timeout 10 --retry 6 --retry-delay 20 --retry-all-errors \
+            "$ASTROCONDA/linux-64/repodata.json" || {
+            echo "::error::This runner cannot reach astroconda; the next run checks $DEV again."
+            exit 1
+          }
+
+      - name: Sync a copy of the recipe with the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq yq
+          pip install requests jinja2-cli
+          cp goats-feedstock/recipe/meta.yaml "$RUNNER_TEMP/meta.yaml"
+          python3 update_release_sha.py --version "$DEV" --meta-path "$RUNNER_TEMP/meta.yaml"
+          curl -fsSL --retry 5 "https://github.com/$GOATS_REPO/archive/$DEV.tar.gz" \
+            | tar -xzO --wildcards '*/pyproject.toml' > "$RUNNER_TEMP/pyproject.toml"
+          python3 sync_deps.py --pyproject-path "$RUNNER_TEMP/pyproject.toml" --meta-path "$RUNNER_TEMP/meta.yaml"
+          jinja2 "$RUNNER_TEMP/meta.yaml" > "$RUNNER_TEMP/rendered.yaml"
+          # The solve below brings python; a gpp-client .devN is only on PyPI.
+          yq -r '.requirements.run[] | select(test("^python( |$)") | not) | select(test("^gpp-client ==.*dev") | not)' \
+            "$RUNNER_TEMP/rendered.yaml" > "$RUNNER_TEMP/specs.txt"
+          cat "$RUNNER_TEMP/specs.txt"
+
+      - name: Resolve the dependencies
+        env:
+          CONDA_CHANNEL_PRIORITY: flexible
+        run: |
+          mapfile -t specs < "$RUNNER_TEMP/specs.txt"
+          conda create --dry-run -n goats-check --override-channels \
+            -c "$CHANNEL_ROOT/conda-test" -c "$CHANNEL_ROOT/conda" -c "$ASTROCONDA" -c conda-forge \
+            python=3.12 "${specs[@]}"
+
+      - name: Remember this dev was checked
+        if: ${{ !cancelled() && steps.reach.outcome == 'success' }}
+        run: mkdir -p .dev-checked && echo "$DEV" > .dev-checked/version
+
+      - name: Save the record
+        if: ${{ !cancelled() && steps.reach.outcome == 'success' }}
+        uses: actions/cache/save@v4
+        with:
+          path: .dev-checked
+          key: dev-checked-${{ env.DEV }}
+
+      - name: Report to Slack
+        if: ${{ !cancelled() && steps.reach.outcome == 'success' }}
+        uses: ./.github/actions/notify-slack
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          status: ${{ job.status }}
+          text: "${{ job.status == 'success' && format('goats {0} (dev, not built): the recipe syncs with it and its dependencies resolve with conda.', env.DEV) || format('goats {0} (dev, not built): the conda check failed. Fix the recipe or the dependency before the next release candidate.', env.DEV) }}"

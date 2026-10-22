@@ -1,6 +1,7 @@
 import argparse
 import hashlib
 import logging
+import os
 import re
 from pathlib import Path
 from urllib.parse import urlparse
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_latest_release_and_sha(
-    repo_url: str, allow_prerelease: bool = False
+    repo_url: str, allow_prerelease: bool = False, version: str | None = None
 ) -> tuple[str, str]:
     """
     Get the latest release tag and SHA256 for a GitHub repository.
@@ -24,6 +25,8 @@ def get_latest_release_and_sha(
     allow_prerelease : bool
         If ``True``, consider prereleases (e.g. release candidates) as well;
         otherwise only the latest stable release is used.
+    version : str | None
+        Use this published release instead of the latest one.
 
     Returns
     -------
@@ -41,14 +44,21 @@ def get_latest_release_and_sha(
 
     # Get latest release info. The "latest" endpoint never returns
     # prereleases, so for those list the releases (newest first) instead.
-    if allow_prerelease:
+    # The tags endpoint only finds published releases, never drafts.
+    if version:
+        api_url = f"https://api.github.com/repos/{owner}/{repo}/releases/tags/{version}"
+    elif allow_prerelease:
         api_url = f"https://api.github.com/repos/{owner}/{repo}/releases?per_page=1"
     else:
         api_url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
-    response = requests.get(api_url, timeout=10)
+    # Unauthenticated calls share a limit of 60 an hour per IP address, which
+    # CI runners often exhaust; use a token when there is one.
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    response = requests.get(api_url, headers=headers, timeout=10)
     response.raise_for_status()
     data = response.json()
-    if allow_prerelease:
+    if allow_prerelease and not version:
         if not data:
             logger.exception("No releases found for repository.")
             raise ValueError("No releases found for repository.")
@@ -105,13 +115,15 @@ def update_meta_yaml(meta_path: Path, version: str, sha256: str) -> bool:
         logger.info("meta.yaml is already up to date.")
         return False
 
-    # Replace version and sha256.
+    # Replace version and sha256. A new version starts again at build 0.
     updated = re.sub(
         version_pattern,
         f'{{% set version = "{version}" %}}',
         content,
     )
     updated = re.sub(sha256_pattern, f"sha256: {sha256}", updated, flags=re.IGNORECASE)
+    if current_version != version:
+        updated = re.sub(r"^(\s*number:\s*)\d+", r"\g<1>0", updated, flags=re.MULTILINE)
 
     meta_path.write_text(updated)
     logger.info("Updated meta.yaml to version=%s and sha256=%s", version, sha256)
@@ -141,6 +153,10 @@ def main() -> None:
         help="Also consider prereleases (e.g. rc versions), not just stable releases",
     )
     parser.add_argument(
+        "--version",
+        help="Use this published release (e.g. 26.11.0rc2) instead of the latest one",
+    )
+    parser.add_argument(
         "--print-only",
         "-p",
         action="store_true",
@@ -150,7 +166,7 @@ def main() -> None:
     args = parser.parse_args()
 
     version, sha256 = get_latest_release_and_sha(
-        args.repo_url, allow_prerelease=args.allow_prerelease
+        args.repo_url, allow_prerelease=args.allow_prerelease, version=args.version
     )
 
     if args.print_only:

@@ -1,0 +1,63 @@
+name: Notify Slack
+description: >
+  Post one message to the GOATS Slack channel with a link to this run. A
+  failure also mentions whoever looks after the conda pipeline. Does
+  nothing when the webhook is empty (e.g. a fork without the secret).
+
+inputs:
+  webhook:
+    description: Incoming webhook URL (secrets.SLACK_WEBHOOK_URL)
+    required: true
+  status:
+    description: success, failure or info; sets the icon and the mention
+    required: true
+  text:
+    description: Message in Slack mrkdwn
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Build the message
+      id: message
+      if: inputs.webhook != ''
+      shell: bash
+      env:
+        STATUS: ${{ inputs.status }}
+        TEXT: ${{ inputs.text }}
+      run: |
+        case "$STATUS" in
+          success) prefix=":white_check_mark:" ;;
+          failure) prefix=":x: <@U0538PY7RL0>" ;;
+          *) prefix=":package:" ;;
+        esac
+        {
+          echo "text<<EOF"
+          echo "$prefix $TEXT"
+          echo "EOF"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Post to Slack
+      if: inputs.webhook != ''
+      uses: slackapi/slack-github-action@v2.1.0
+      with:
+        webhook: ${{ inputs.webhook }}
+        webhook-type: incoming-webhook
+        payload: |
+          {
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": ${{ toJSON(steps.message.outputs.text) }}
+                },
+                "accessory": {
+                  "type": "button",
+                  "text": { "type": "plain_text", "text": "View run", "emoji": true },
+                  "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+                  "action_id": "view-run"
+                }
+              }
+            ]
+          }

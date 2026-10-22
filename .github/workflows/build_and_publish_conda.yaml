@@ -7,7 +7,17 @@ name: Build and publish Conda packages
 # Only release candidates and final releases are packaged, and they pin a
 # stable gpp-client (e.g. ==26.10.6), which talks to GPP production. devN
 # GOATS are not built here: developers install GOATS from PyPI with uv.
+#
+# After publishing, it installs from the live channel and, for a final
+# release, starts the promotion PR. Slack hears about the result.
 on:
+  # A recipe change pushed to main builds it. prepare_recipe.yaml commits
+  # with GITHUB_TOKEN, which starts no workflow, so it starts this one
+  # itself.
+  push:
+    branches: [main]
+    paths:
+      - goats-feedstock/recipe/**
   workflow_dispatch:
 
 env:
@@ -34,6 +44,7 @@ jobs:
       build: ${{ steps.metadata.outputs.build }}
       source: ${{ steps.metadata.outputs.source }}
       gpp_client: ${{ steps.metadata.outputs.gpp_client }}
+      final: ${{ steps.release.outputs.final }}
       build_channels: ${{ steps.release.outputs.build_channels }}
       install_channels: ${{ steps.release.outputs.install_channels }}
     defaults:
@@ -86,8 +97,13 @@ jobs:
             echo "::error::goats $VERSION must pin a stable gpp-client with ==, found '$GPP_CLIENT'. A gpp-client .devN talks to GPP development."
             exit 1
           fi
+          final=false
+          if [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+            final=true
+          fi
           ours="$CHANNEL_ROOT/conda-test $CHANNEL_ROOT/conda"
           {
+            echo "final=$final"
             echo "build_channels=$ours conda-forge $ASTROCONDA"
             echo "install_channels=$ours $ASTROCONDA conda-forge"
           } >> "$GITHUB_OUTPUT"
@@ -349,3 +365,70 @@ jobs:
           packages: ${{ runner.temp }}/built
           message: "Publish goats-${{ needs.verify.outputs.version }}-${{ needs.verify.outputs.build }} (gpp-client ${{ needs.verify.outputs.gpp_client }})."
           token: ${{ github.token }}
+
+  # Installs from the live channel, its index and GitHub Pages included, the
+  # way testers will.
+  test-published:
+    name: Test the published package
+    needs: [verify, publish]
+    uses: ./.github/workflows/test_conda_install.yaml
+    with:
+      channel: conda-test
+      version: ${{ needs.verify.outputs.version }}
+      notify: false
+    secrets: inherit
+
+  # R4: a final release that passed every test is ready for production. The
+  # promotion itself is a PR that a person reviews and merges.
+  promote:
+    name: Open the promotion PR
+    needs: [verify, test-published]
+    if: needs.verify.outputs.final == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Start promote_conda_package.yaml
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: gh workflow run promote_conda_package.yaml --repo "$GITHUB_REPOSITORY" --ref main -f package=goats -f version="$VERSION"
+
+  notify:
+    name: Report to Slack
+    needs: [verify, build, test-install, publish, test-published, promote]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: .github
+          filter: blob:none
+
+      - name: Write the message
+        id: message
+        env:
+          FAILED: ${{ contains(needs.*.result, 'failure') }}
+          FINAL: ${{ needs.verify.outputs.final }}
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          if [ "$FAILED" = true ]; then
+            status=failure
+            text="goats $VERSION: the conda build, test or publish failed."
+          elif [ "$FINAL" = true ]; then
+            status=success
+            text="goats $VERSION is in conda-test and passed the install tests. The promotion PR to conda opens next."
+          else
+            status=success
+            text="goats $VERSION is in conda-test for testers: add \`$CHANNEL_ROOT/conda-test\` before the usual channels and install \`goats==$VERSION\`."
+          fi
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "text=$text" >> "$GITHUB_OUTPUT"
+
+      - name: Report
+        uses: ./.github/actions/notify-slack
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          status: ${{ steps.message.outputs.status }}
+          text: ${{ steps.message.outputs.text }}

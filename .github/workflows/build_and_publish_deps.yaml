@@ -2,9 +2,14 @@ name: Build and publish dependency Conda packages
 
 # Builds every recipe in dependency-feedstocks/recipes/ that is not already
 # published, in dependency order (rattler-build sorts them), and publishes the
-# new packages to conda-test, where both GOATS tracks find them. Production
+# new packages to conda-test, where the GOATS build finds them. Production
 # gets them through promote_conda_package.yaml, with the GOATS that needs them.
 on:
+  # A recipe change pushed to main builds whatever is not published yet.
+  push:
+    branches: [main]
+    paths:
+      - dependency-feedstocks/recipes/**
   workflow_dispatch:
 
 env:
@@ -102,3 +107,22 @@ jobs:
           packages: ${{ runner.temp }}/built
           message: "Publish dependency packages: ${{ needs.build.outputs.built }}"
           token: ${{ github.token }}
+
+  notify:
+    name: Report to Slack
+    needs: [build, publish]
+    if: ${{ !cancelled() && (contains(needs.*.result, 'failure') || needs.publish.result == 'success') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: .github
+          filter: blob:none
+
+      - name: Report
+        uses: ./.github/actions/notify-slack
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          status: ${{ contains(needs.*.result, 'failure') && 'failure' || 'info' }}
+          text: "${{ contains(needs.*.result, 'failure') && 'Building or publishing the GOATS dependency packages failed.' || format('New dependency packages in conda-test: {0}', needs.build.outputs.built) }}"

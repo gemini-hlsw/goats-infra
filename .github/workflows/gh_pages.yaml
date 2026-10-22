@@ -18,22 +18,38 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
-  # Single deploy job since we're just deploying.
   deploy:
+    # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+    # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    outputs:
+      conda_changed: ${{ steps.changes.outputs.conda }}
+      conda_version: ${{ steps.changes.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      # A push that changes docs/gh_pages/conda is a promotion; the
+      # test-conda job checks the production channel once it is deployed.
+      - name: Check whether production changed
+        id: changes
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BEFORE...$GITHUB_SHA" --jq '.files[].filename')
+          if grep -q '^docs/gh_pages/conda/' <<<"$files"; then
+            echo "conda=true" >> "$GITHUB_OUTPUT"
+            version=$(grep -oP '^docs/gh_pages/conda/linux-64/goats-\K[^-]+(?=-)' <<<"$files" | head -1 || true)
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+          fi
       # conda-test lives on its own branch (one commit, rewritten on every
       # publish) so it never grows main's history. The branch replaces any
       # copy main still has. Deploying without the channel would make it
@@ -62,3 +78,13 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  test-conda:
+    name: Test the production channel
+    needs: deploy
+    if: needs.deploy.outputs.conda_changed == 'true'
+    uses: ./.github/workflows/test_conda_install.yaml
+    with:
+      channel: conda
+      version: ${{ needs.deploy.outputs.conda_version }}
+    secrets: inherit

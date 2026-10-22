@@ -44,17 +44,12 @@ jobs:
         run: |
           conda install -y conda-index
 
-      # conda-test lives on its own branch; until its first publish there,
-      # main still holds it.
+      # conda-test lives on its own branch.
       - name: Fetch the conda-test channel
         run: |
           mkdir -p "$RUNNER_TEMP/conda-test"
-          if git ls-remote --exit-code --heads origin conda-test >/dev/null; then
-            git fetch --depth 1 origin conda-test
-            git archive FETCH_HEAD | tar -x -C "$RUNNER_TEMP/conda-test"
-          else
-            cp -r docs/gh_pages/conda-test/. "$RUNNER_TEMP/conda-test"/
-          fi
+          git fetch --depth 1 origin conda-test
+          git archive FETCH_HEAD | tar -x -C "$RUNNER_TEMP/conda-test"
 
       # promote.py imports conda, which lives in the base environment.
       - name: Copy packages from conda-test to conda
@@ -96,7 +91,16 @@ jobs:
             ${{ steps.copy.outputs.files }}
 
             The production Conda index has been updated in `docs/gh_pages/conda/`.
-            After merging, run `Test Conda Install` with channel `conda` and this version.
+            Merging redeploys GitHub Pages, which then installs this version from
+            `conda` and reports the result to Slack.
           reviewers: miguelgomezgomez
           assignees: miguelgomezgomez
           commit-message: "Promote ${{ inputs.package }}-${{ inputs.version }} to conda."
+
+      - name: Report to Slack
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/notify-slack
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          status: ${{ job.status == 'success' && 'info' || 'failure' }}
+          text: "${{ job.status == 'success' && format('{0}-{1} is ready for production. Review and merge {2}', inputs.package, inputs.version, steps.cpr.outputs.pull-request-url) || format('Promoting {0}-{1} to conda failed.', inputs.package, inputs.version) }}"

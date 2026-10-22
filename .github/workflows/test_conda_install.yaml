@@ -1,5 +1,9 @@
 name: Test Conda Install
 
+# Installs GOATS from a live channel the way users and testers do, and runs
+# its setup. Runs by hand, every Sunday against conda, after each publish to
+# conda-test (from build_and_publish_conda.yaml) and after each promotion to
+# conda (from gh_pages.yaml).
 on:
   workflow_dispatch:
     inputs:
@@ -15,6 +19,21 @@ on:
         description: GOATS version to install, e.g. 26.11.0rc1 (empty for the latest)
         required: false
         type: string
+  workflow_call:
+    inputs:
+      channel:
+        description: conda or conda-test
+        required: true
+        type: string
+      version:
+        description: GOATS version to install (empty for the latest)
+        required: false
+        type: string
+      notify:
+        description: Post the result to Slack; off when the caller reports it
+        required: false
+        type: boolean
+        default: true
   schedule:
     - cron: "0 0 * * 0" # Runs Sunday at midnight UTC.
 
@@ -49,9 +68,35 @@ jobs:
         python-version: ["3.12"]
 
     steps:
+      # Only for the Slack action; the channels hold the packages.
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: .github
+          filter: blob:none
+
       - name: Install coreutils (macOS only)
         if: ${{ matrix.os == 'macos-15-intel' }}
         run: brew install coreutils
+
+      # Right after a publish, GitHub Pages can take minutes to serve the new
+      # index.
+      - name: Wait for the channel to serve this version
+        if: env.GOATS_VERSION != ''
+        env:
+          SUBDIR: ${{ runner.os == 'macOS' && 'osx-64' || 'linux-64' }}
+        run: |
+          url="$CHANNEL_ROOT/$GOATS_CHANNEL/$SUBDIR/repodata.json"
+          attempt=1
+          until curl -fsSL "$url" | jq -e --arg v "$GOATS_VERSION" '[.packages, ."packages.conda"] | map(.[]?) | any(.name == "goats" and .version == $v)' >/dev/null; do
+            if [ "$attempt" -eq 30 ]; then
+              echo "::error::$GOATS_CHANNEL never served goats $GOATS_VERSION for $SUBDIR."
+              exit 1
+            fi
+            echo "goats $GOATS_VERSION is not in $GOATS_CHANNEL yet ($attempt/30), waiting 30 seconds."
+            attempt=$((attempt + 1))
+            sleep 30
+          done
 
       # Only conda-forge here: this action cannot retry, so the channels that
       # time out are left to the install step, which can.
@@ -117,91 +162,12 @@ jobs:
             goats install --ci
           fi
 
-      - name: Send Slack success
-        if: ${{ success() }}
-        uses: slackapi/slack-github-action@v2.1.0
+      # notify only exists when called from another workflow. format() keeps
+      # a missing input (null) apart from false: expressions coerce both to 0.
+      - name: Report to Slack
+        if: ${{ !cancelled() && format('{0}', inputs.notify) != 'false' }}
+        uses: ./.github/actions/notify-slack
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":white_check_mark: GOATS Conda install from `${{ env.GOATS_CHANNEL }}` succeeded"
-                  },
-                  "accessory": {
-                    "type": "button",
-                    "text": {
-                      "type": "plain_text",
-                      "text": "View run",
-                      "emoji": true
-                    },
-                    "value": "view_run",
-                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-                    "action_id": "button-action"
-                  },
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*OS:*\n`${{ matrix.os }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Architecture:*\n`${{ runner.arch }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Python Version:*\n`${{ matrix.python-version }}`"
-                    },
-                  ],
-                }
-              ]
-            }
-
-
-      - name: Send Slack failure
-        if: ${{ failure() }}
-        uses: slackapi/slack-github-action@v2.1.0
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":x: <@U0538PY7RL0> GOATS Conda install from `${{ env.GOATS_CHANNEL }}` failed"
-                  },
-                  "accessory": {
-                    "type": "button",
-                    "text": {
-                      "type": "plain_text",
-                      "text": "View run",
-                      "emoji": true
-                    },
-                    "value": "view_run",
-                    "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-                    "action_id": "button-action"
-                  },
-                  "fields": [
-                    {
-                      "type": "mrkdwn",
-                      "text": "*OS:*\n`${{ matrix.os }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Architecture:*\n`${{ runner.arch }}`"
-                    },
-                    {
-                      "type": "mrkdwn",
-                      "text": "*Python Version:*\n`${{ matrix.python-version }}`"
-                    },
-                  ],
-                }
-              ]
-            }
+          status: ${{ job.status }}
+          text: "GOATS ${{ env.GOATS_VERSION || 'latest' }} from `${{ env.GOATS_CHANNEL }}` on `${{ matrix.os }}`: install and setup ${{ job.status == 'success' && 'passed' || 'failed' }}."
