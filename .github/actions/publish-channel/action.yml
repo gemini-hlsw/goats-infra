@@ -1,13 +1,13 @@
 name: Publish to a pre-release channel
 description: >
-  Add built packages to conda-test or conda-dev, prune what nobody needs,
-  reindex, force-push the channel as the single commit of its branch and
-  redeploy GitHub Pages. The caller must have checked out main, set up
-  Miniforge, and hold contents: write and actions: write permissions.
+  Add built packages to conda-test, prune what nobody needs, reindex,
+  force-push the channel as the single commit of its branch and redeploy
+  GitHub Pages. The caller must have checked out main, set up Miniforge,
+  and hold contents: write and actions: write permissions.
 
 inputs:
   channel:
-    description: conda-test or conda-dev; also the name of the branch that holds it
+    description: conda-test, also the name of the branch that holds it
     required: true
   packages:
     description: Directory with the built .conda files in noarch/, linux-64/ or osx-64/
@@ -31,7 +31,7 @@ runs:
         CHANNEL: ${{ inputs.channel }}
       run: |
         case "$CHANNEL" in
-          conda-test|conda-dev) ;;
+          conda-test) ;;
           *) echo "::error::Unknown channel '$CHANNEL'."; exit 1 ;;
         esac
         # conda-index titles the channel pages after this folder's name.

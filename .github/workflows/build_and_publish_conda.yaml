@@ -1,16 +1,12 @@
 name: Build and publish Conda packages
 
-# Builds the GOATS recipe, installs and sets it up, and publishes it to the
-# pre-release channel its gpp-client pin belongs to:
+# Builds the GOATS recipe, installs and sets it up, and publishes it to
+# conda-test, the only source for promote_conda_package.yaml. Production
+# (conda) only gets final versions, by promotion.
 #
-# - stable gpp-client (e.g. ==26.10.6), GPP production: conda-test.
-#   rcN and final GOATS. The only source for promote_conda_package.yaml.
-# - gpp-client .devN, GPP development (gpp-client ADR 0002): conda-dev.
-#   devN GOATS only. Never promoted. If conda-dev lacks that exact
-#   gpp-client .devN, this run builds it from PyPI and publishes it too; no
-#   other gpp-client version is ever packaged.
-#
-# Production (conda) only gets final versions, by promotion.
+# Only release candidates and final releases are packaged, and they pin a
+# stable gpp-client (e.g. ==26.10.6), which talks to GPP production. devN
+# GOATS are not built here: developers install GOATS from PyPI with uv.
 on:
   workflow_dispatch:
 
@@ -28,7 +24,7 @@ env:
 # succeed must end on their last command, never on `exit 0`.
 jobs:
   verify:
-    name: Verify recipe and pick the track
+    name: Verify the recipe
     runs-on: ubuntu-latest
     outputs:
       name: ${{ steps.metadata.outputs.name }}
@@ -36,11 +32,8 @@ jobs:
       build: ${{ steps.metadata.outputs.build }}
       source: ${{ steps.metadata.outputs.source }}
       gpp_client: ${{ steps.metadata.outputs.gpp_client }}
-      gpp_client_build: ${{ steps.dev_gpp.outputs.build }}
-      channel: ${{ steps.track.outputs.channel }}
-      environment: ${{ steps.track.outputs.environment }}
-      build_channels: ${{ steps.track.outputs.build_channels }}
-      install_channels: ${{ steps.track.outputs.install_channels }}
+      build_channels: ${{ steps.release.outputs.build_channels }}
+      install_channels: ${{ steps.release.outputs.install_channels }}
     defaults:
       run:
         shell: bash -el {0}
@@ -73,44 +66,30 @@ jobs:
           echo "gpp_client=$gpp_client" >> "$GITHUB_OUTPUT"
           echo "goats $version (build $build) pins gpp-client $gpp_client"
 
-      # R1: the gpp-client pin picks the track, and only a devN GOATS may pin
-      # a gpp-client .devN. Build channels follow strict priority; install
-      # channels follow the order users, testers and developers configure:
-      # our channels, then astroconda, then conda-forge.
-      - name: Pick the track from the gpp-client pin
-        id: track
+      # R1: only release candidates and final releases, pinned to a stable
+      # gpp-client. Build channels follow strict priority; install channels
+      # follow the order users and testers configure: our channels, then
+      # astroconda, then conda-forge.
+      - name: Check the version and the gpp-client pin
+        id: release
         env:
           VERSION: ${{ steps.metadata.outputs.version }}
           GPP_CLIENT: ${{ steps.metadata.outputs.gpp_client }}
         run: |
-          if [[ ! "$GPP_CLIENT" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.dev[0-9]+)?$ ]]; then
-            echo "::error::The recipe must pin gpp-client with ==, found '$GPP_CLIENT'."
+          if [[ "$VERSION" == *dev* ]]; then
+            echo "::error::goats $VERSION is a devN version. Only release candidates and final releases are built and published."
             exit 1
           fi
-          if [[ "$GPP_CLIENT" == *.dev* ]]; then
-            if [[ "$VERSION" != *dev* ]]; then
-              echo "::error::goats $VERSION is a release candidate or final release but pins gpp-client $GPP_CLIENT (.devN). Pin a stable gpp-client or release goats as a devN version."
-              exit 1
-            fi
-            channel=conda-dev
-            environment=DEVELOPMENT
-            ours="$CHANNEL_ROOT/conda-test $CHANNEL_ROOT/conda"
-            # conda-dev does not exist until the first dev build publishes to it.
-            if curl -fsSL -o /dev/null "$CHANNEL_ROOT/conda-dev/noarch/repodata.json"; then
-              ours="$CHANNEL_ROOT/conda-dev $ours"
-            fi
-          else
-            channel=conda-test
-            environment=PRODUCTION
-            ours="$CHANNEL_ROOT/conda-test $CHANNEL_ROOT/conda"
+          if [[ ! "$GPP_CLIENT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::goats $VERSION must pin a stable gpp-client with ==, found '$GPP_CLIENT'. A gpp-client .devN talks to GPP development."
+            exit 1
           fi
+          ours="$CHANNEL_ROOT/conda-test $CHANNEL_ROOT/conda"
           {
-            echo "channel=$channel"
-            echo "environment=$environment"
             echo "build_channels=$ours conda-forge $ASTROCONDA"
             echo "install_channels=$ours $ASTROCONDA conda-forge"
           } >> "$GITHUB_OUTPUT"
-          echo "goats $VERSION goes to $channel (GPP $environment)."
+          echo "goats $VERSION goes to conda-test."
 
       # R2: build only from a published (non-draft) GOATS release.
       - name: Check the GOATS release is published
@@ -137,44 +116,22 @@ jobs:
           tar -xzf "$RUNNER_TEMP/source.tar.gz" -O --wildcards '*/pyproject.toml' > "$RUNNER_TEMP/pyproject.toml"
           python3 sync_deps.py --check --pyproject-path "$RUNNER_TEMP/pyproject.toml"
 
-      # R5: gpp-client lives only in conda-dev; in conda-test or conda it
-      # would hide conda-forge's releases under strict channel priority.
-      - name: Check gpp-client is only in conda-dev
+      # R5: gpp-client never goes in our channels; there it would hide
+      # conda-forge's releases under strict channel priority.
+      - name: Check our channels carry no gpp-client
         run: |
           for channel in conda-test conda; do
             for subdir in noarch linux-64 osx-64; do
               url="$CHANNEL_ROOT/$channel/$subdir/repodata.json"
               if curl -fsSL --retry 3 "$url" -o "$RUNNER_TEMP/repodata.json" 2>/dev/null \
                 && jq -e '[.packages, ."packages.conda"] | map(.[]?) | any(.name == "gpp-client")' "$RUNNER_TEMP/repodata.json" >/dev/null; then
-                echo "::error::$channel/$subdir carries gpp-client. Remove it: only conda-dev may."
+                echo "::error::$channel/$subdir carries gpp-client. Remove it: gpp-client comes from conda-forge."
                 exit 1
               fi
             done
           done
 
-      # Dev track: conda-dev carries a gpp-client .devN only while a GOATS
-      # build pins it. If this is the first GOATS to pin this one, the
-      # gpp-client-dev job builds it from its PyPI sdist.
-      - name: Find the gpp-client .devN in conda-dev
-        id: dev_gpp
-        if: steps.track.outputs.channel == 'conda-dev'
-        env:
-          GPP_CLIENT: ${{ steps.metadata.outputs.gpp_client }}
-        run: |
-          if curl -fsSL "$CHANNEL_ROOT/conda-dev/noarch/repodata.json" 2>/dev/null \
-            | jq -e --arg v "$GPP_CLIENT" '[.packages, ."packages.conda"] | map(.[]?) | any(.name == "gpp-client" and .version == $v)' >/dev/null; then
-            echo "gpp-client $GPP_CLIENT is already in conda-dev."
-            echo "build=false" >> "$GITHUB_OUTPUT"
-          elif curl -fsSL --retry 5 -o /dev/null "https://pypi.org/pypi/gpp-client/$GPP_CLIENT/json"; then
-            echo "gpp-client $GPP_CLIENT is not in conda-dev yet; this run builds it."
-            echo "build=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "::error::gpp-client $GPP_CLIENT is neither in conda-dev nor on PyPI. Release it first."
-            exit 1
-          fi
-
       - name: Set up Miniforge
-        if: steps.track.outputs.channel == 'conda-test'
         uses: conda-incubator/setup-miniconda@v4
         with:
           miniforge-version: latest
@@ -182,11 +139,10 @@ jobs:
           channels: conda-forge
           conda-remove-defaults: "true"
 
-      # Test track: a new gpp-client takes a while to show up in the
-      # conda-forge index after its feedstock PR merges. Wait for it instead
-      # of failing the build.
+      # A new gpp-client takes a while to show up in the conda-forge index
+      # after its feedstock PR merges. Wait for it instead of failing the
+      # build.
       - name: Wait for gpp-client on conda-forge
-        if: steps.track.outputs.channel == 'conda-test'
         env:
           GPP_CLIENT: ${{ steps.metadata.outputs.gpp_client }}
           CONDA_LOCAL_REPODATA_TTL: "0"
@@ -203,56 +159,6 @@ jobs:
           done
           echo "gpp-client $GPP_CLIENT is available on conda-forge."
 
-  # Dev track only, and only when conda-dev lacks the pinned gpp-client .devN.
-  gpp-client-dev:
-    name: Build gpp-client ${{ needs.verify.outputs.gpp_client }} (noarch)
-    needs: verify
-    if: needs.verify.outputs.gpp_client_build == 'true'
-    runs-on: ubuntu-latest
-    env:
-      RATTLER_BUILD_VERSION: "0.76.1"
-      RECIPE: dependency-feedstocks/gpp-client-dev/recipe.yaml
-      VERSION: ${{ needs.verify.outputs.gpp_client }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Point the recipe at the PyPI sdist
-        run: |
-          sha256=$(curl -fsSL --retry 5 "https://pypi.org/pypi/gpp-client/$VERSION/json" \
-            | jq -r '.urls[] | select(.packagetype == "sdist") | .digests.sha256')
-          if [ -z "$sha256" ]; then
-            echo "::error::gpp-client $VERSION has no sdist on PyPI."
-            exit 1
-          fi
-          # Only the quoted context.version; package.version reads it.
-          sed -i -E "s/^(  version: )\"[^\"]*\"$/\1\"$VERSION\"/; s/^(  sha256: ).*/\1$sha256/" "$RECIPE"
-          grep -nE '^  (version|sha256):' "$RECIPE"
-
-      - name: Install rattler-build
-        run: |
-          url=https://github.com/prefix-dev/rattler-build/releases/download/v${RATTLER_BUILD_VERSION}/rattler-build-x86_64-unknown-linux-musl
-          curl -fsSL --retry 5 -o "$RUNNER_TEMP/rattler-build" "$url"
-          chmod +x "$RUNNER_TEMP/rattler-build"
-          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
-
-      # The recipe test asserts the package carries GPP development code.
-      - name: Build recipe
-        run: |
-          rattler-build build \
-            --recipe "$RECIPE" \
-            --channel conda-forge \
-            --output-dir "$RUNNER_TEMP/rattler-out"
-          mkdir -p "$RUNNER_TEMP/gpp-client-dev/noarch"
-          cp -v "$RUNNER_TEMP"/rattler-out/noarch/*.conda "$RUNNER_TEMP/gpp-client-dev/noarch/"
-
-      - name: Upload built artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: gpp-client-dev
-          path: ${{ runner.temp }}/gpp-client-dev
-
   build:
     name: Conda build (${{ matrix.os }})
     strategy:
@@ -261,9 +167,7 @@ jobs:
         os: [ubuntu-latest, macos-15-intel]
         python-version: ["3.12"]
     runs-on: ${{ matrix.os }}
-    needs: [verify, gpp-client-dev]
-    # gpp-client-dev is skipped unless this run builds a gpp-client .devN.
-    if: ${{ !cancelled() && needs.verify.result == 'success' && contains(fromJSON('["success", "skipped"]'), needs.gpp-client-dev.result) }}
+    needs: verify
     defaults:
       run:
         shell: bash -el {0}
@@ -289,34 +193,19 @@ jobs:
         run: |
           conda install -y -n base conda-build conda-index
 
-      - name: Download the gpp-client built in this run
-        if: needs.verify.outputs.gpp_client_build == 'true'
-        uses: actions/download-artifact@v7
-        with:
-          name: gpp-client-dev
-          path: ${{ runner.temp }}/gpp-client-dev
-
-      - name: Index it as a local channel
-        if: needs.verify.outputs.gpp_client_build == 'true'
-        run: conda run -n base python -m conda_index "$RUNNER_TEMP/gpp-client-dev"
-
       - name: Create output folder
         run: mkdir -p ${{ runner.temp }}/conda-artifacts
 
       # goats-infra channels go before conda-forge: with strict channel
       # priority they must shadow conda-forge for the packages we override
-      # (e.g. ipyvuedraggable) and, on the dev track, for gpp-client. A
-      # gpp-client built in this run goes first of all. A failure that only
-      # comes from an unreachable channel is retried.
+      # (e.g. ipyvuedraggable). A failure that only comes from an unreachable
+      # channel is retried.
       - name: Build recipe
         env:
           CHANNELS: ${{ needs.verify.outputs.build_channels }}
         run: |
           set -o pipefail
           channel_args=()
-          if [ -d "$RUNNER_TEMP/gpp-client-dev" ]; then
-            channel_args+=(--channel "file://$RUNNER_TEMP/gpp-client-dev")
-          fi
           for channel in $CHANNELS; do channel_args+=(--channel "$channel"); done
           attempt=1
           until conda build goats-feedstock/recipe \
@@ -339,13 +228,11 @@ jobs:
           overwrite: true
           path: ${{ runner.temp }}/conda-artifacts
 
-  # R3: install the built package the way users, testers and developers do
-  # (flexible priority, their channel order) and run GOATS setup before
-  # publishing.
+  # R3: install the built package the way users and testers do (flexible
+  # priority, their channel order) and run GOATS setup before publishing.
   test-install:
     name: Install and run (${{ matrix.os }})
     needs: [verify, build]
-    if: ${{ !cancelled() && needs.build.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -360,13 +247,6 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: ${{ runner.os }}-${{ runner.arch }}-${{ needs.verify.outputs.version }}-${{ needs.verify.outputs.build }}
-          path: ${{ runner.temp }}/local-channel
-
-      - name: Download the gpp-client built in this run
-        if: needs.verify.outputs.gpp_client_build == 'true'
-        uses: actions/download-artifact@v7
-        with:
-          name: gpp-client-dev
           path: ${{ runner.temp }}/local-channel
 
       - name: Set up Miniforge
@@ -394,11 +274,9 @@ jobs:
             python=3.12 "goats==$VERSION"
           conda list -n goats-test "^(goats|gpp-client|jdaviz)$"
 
-      - name: Check gpp-client targets the track's GPP environment
-        env:
-          EXPECTED: ${{ needs.verify.outputs.environment }}
+      - name: Check gpp-client targets GPP production
         run: |
-          conda run -n goats-test python -c "from gpp_client.generated.package_environment import PACKAGE_ENVIRONMENT as env; print(env); assert env == '$EXPECTED', env"
+          conda run -n goats-test python -c "from gpp_client.generated.package_environment import PACKAGE_ENVIRONMENT as env; print(env); assert env == 'PRODUCTION', env"
 
       - name: Run setup and Django checks
         env:
@@ -410,14 +288,13 @@ jobs:
 
   publish:
     needs: [verify, build, test-install]
-    if: ${{ !cancelled() && needs.test-install.result == 'success' }}
-    name: Publish to ${{ needs.verify.outputs.channel }}
+    name: Publish to conda-test
     runs-on: ubuntu-latest
     permissions:
       contents: write
       actions: write
     concurrency:
-      group: ${{ needs.verify.outputs.channel }}
+      group: conda-test
       cancel-in-progress: false
     defaults:
       run:
@@ -435,7 +312,6 @@ jobs:
           channels: conda-forge
           conda-remove-defaults: "true"
 
-      # Brings the GOATS builds and, if this run built it, the gpp-client .devN.
       - name: Download built artifacts
         uses: actions/download-artifact@v7
         with:
@@ -445,7 +321,7 @@ jobs:
       - name: Publish
         uses: ./.github/actions/publish-channel
         with:
-          channel: ${{ needs.verify.outputs.channel }}
+          channel: conda-test
           packages: ${{ runner.temp }}/built
-          message: "Publish goats-${{ needs.verify.outputs.version }}-${{ needs.verify.outputs.build }} (gpp-client ${{ needs.verify.outputs.gpp_client }}, GPP ${{ needs.verify.outputs.environment }})."
+          message: "Publish goats-${{ needs.verify.outputs.version }}-${{ needs.verify.outputs.build }} (gpp-client ${{ needs.verify.outputs.gpp_client }})."
           token: ${{ github.token }}

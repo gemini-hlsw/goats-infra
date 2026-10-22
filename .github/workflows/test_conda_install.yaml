@@ -11,7 +11,6 @@ on:
         options:
           - conda
           - conda-test
-          - conda-dev
       version:
         description: GOATS version to install, e.g. 26.11.0rc1 (empty for the latest)
         required: false
@@ -71,7 +70,6 @@ jobs:
         run: |
           set -o pipefail
           case "$GOATS_CHANNEL" in
-            conda-dev) channels="conda-dev conda-test conda" ;;
             conda-test) channels="conda-test conda" ;;
             *) channels="conda" ;;
           esac
@@ -91,21 +89,17 @@ jobs:
           done
           conda list "^(goats|gpp-client)$"
 
-      # A gpp-client .devN carries GPP development code (ADR 0002); anything
-      # else, and everything in conda, must talk to GPP production.
-      - name: Check gpp-client targets the right GPP environment
+      # Published GOATS only pin stable gpp-client releases, which talk to GPP
+      # production (gpp-client ADR 0002).
+      - name: Check gpp-client targets GPP production
         run: |
           python - <<'EOF'
-          import os
           from importlib.metadata import version
 
           from gpp_client.generated.package_environment import PACKAGE_ENVIRONMENT as env
 
-          gpp_client = version("gpp-client")
-          expected = "DEVELOPMENT" if ".dev" in gpp_client else "PRODUCTION"
-          print(f"gpp-client {gpp_client}: {env}")
-          assert env == expected, f"expected {expected}"
-          assert os.environ["GOATS_CHANNEL"] != "conda" or env == "PRODUCTION"
+          print(f"gpp-client {version('gpp-client')}: {env}")
+          assert env == "PRODUCTION", "expected PRODUCTION"
           EOF
 
       - name: Run setup without prompts

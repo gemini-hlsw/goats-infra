@@ -1,11 +1,9 @@
-"""Delete pre-release channel packages nobody needs any more, so it stays small.
+"""Delete conda-test packages nobody needs any more, so the channel stays small.
 
-Used for conda-test and conda-dev. Keeps:
+Keeps:
 
 - the newest ``--keep`` GOATS versions;
 - any final GOATS version not yet promoted to conda;
-- in conda-dev, only the gpp-client .devN those GOATS pin: one is built when
-  a dev GOATS first pins it and goes away with the last GOATS that does;
 - every other package (the jdaviz stack): it is small and GOATS needs it.
 
 Run with a Python that has conda installed, then reindex the channel.
@@ -46,14 +44,6 @@ def newest_versions(records: list[dict], count: int) -> set[str]:
     return set(sorted(versions, key=VersionOrder, reverse=True)[:count])
 
 
-def pinned_gpp_client(record: dict) -> str | None:
-    for dep in record.get("depends", []):
-        match = re.fullmatch(r"gpp-client\s*==\s*(\S+)", dep)
-        if match:
-            return match.group(1)
-    return None
-
-
 def plan(records: list[dict], prod: list[dict], keep: int) -> list[dict]:
     """Return the channel records to delete."""
     goats = [r for r in records if r["name"] == "goats"]
@@ -63,18 +53,12 @@ def plan(records: list[dict], prod: list[dict], keep: int) -> list[dict]:
         for r in goats
         if FINAL_VERSION.match(r["version"]) and r["version"] not in promoted
     }
-    keep_gpp = {pinned_gpp_client(r) for r in goats if r["version"] in keep_goats}
-    return [
-        r
-        for r in records
-        if (r["name"] == "goats" and r["version"] not in keep_goats)
-        or (r["name"] == "gpp-client" and r["version"] not in keep_gpp)
-    ]
+    return [r for r in goats if r["version"] not in keep_goats]
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("channel", type=Path, help="conda-test or conda-dev channel directory")
+    parser.add_argument("channel", type=Path, help="conda-test channel directory")
     parser.add_argument(
         "--prod",
         type=Path,

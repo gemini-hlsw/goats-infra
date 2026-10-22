@@ -9,7 +9,7 @@ on:
       - "docs/gh_pages/**"
 
   # Allows you to run this workflow manually from the Actions tab. The
-  # conda-dev publishing workflows also start it after updating that branch.
+  # conda-test publishing workflows also start it after updating that branch.
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages.
@@ -34,26 +34,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      # conda-test and conda-dev live on their own branches (one commit each,
-      # rewritten on every publish) so they never grow main's history. A
-      # branch replaces any copy main still has. Deploying without a channel
-      # would make it vanish, so a failed fetch fails the deploy and Pages
-      # keeps serving the previous one.
-      - name: Add the pre-release channels
+      # conda-test lives on its own branch (one commit, rewritten on every
+      # publish) so it never grows main's history. The branch replaces any
+      # copy main still has. Deploying without the channel would make it
+      # vanish, so a failed fetch fails the deploy and Pages keeps serving
+      # the previous one.
+      - name: Add the conda-test channel
         run: |
-          for channel in conda-test conda-dev; do
-            status=0
-            git ls-remote --exit-code --heads origin "$channel" >/dev/null || status=$?
-            if [ "$status" -eq 0 ]; then
-              git fetch --depth 1 origin "$channel"
-              rm -rf "docs/gh_pages/$channel"
-              mkdir -p "docs/gh_pages/$channel"
-              git archive FETCH_HEAD | tar -x -C "docs/gh_pages/$channel"
-            elif [ "$status" -ne 2 ]; then
-              echo "::error::Could not reach the $channel branch."
-              exit 1
-            fi
-          done
+          status=0
+          git ls-remote --exit-code --heads origin conda-test >/dev/null || status=$?
+          if [ "$status" -eq 0 ]; then
+            git fetch --depth 1 origin conda-test
+            rm -rf docs/gh_pages/conda-test
+            mkdir -p docs/gh_pages/conda-test
+            git archive FETCH_HEAD | tar -x -C docs/gh_pages/conda-test
+          elif [ "$status" -ne 2 ]; then
+            echo "::error::Could not reach the conda-test branch."
+            exit 1
+          fi
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
