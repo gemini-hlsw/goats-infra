@@ -82,7 +82,10 @@ jobs:
           DJANGO_SUPERUSER_PASSWORD: changeme
         run: |
           # goats 26.4 and older, still the latest in conda, only know --ci.
-          if goats install --help | grep -q -- "--headless-superuser"; then
+          # Click rejects an unknown option before printing help, so the exit
+          # code tells. Grepping the help fails here: on GitHub Actions typer
+          # colors it and splits option names with escape codes.
+          if goats install --headless-superuser --help >/dev/null 2>&1; then
             goats install --headless-superuser
           else
             goats install --ci
