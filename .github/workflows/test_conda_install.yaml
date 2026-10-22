@@ -164,10 +164,31 @@ jobs:
 
       # notify only exists when called from another workflow. format() keeps
       # a missing input (null) apart from false: expressions coerce both to 0.
-      - name: Report to Slack
+      - name: Write the report
+        id: report
         if: ${{ !cancelled() && format('{0}', inputs.notify) != 'false' }}
+        env:
+          STATUS: ${{ job.status }}
+        run: |
+          # The version conda actually installed, which a run without one picks.
+          version=$(conda list '^goats$' --json 2>/dev/null | jq -r '.[0].version // empty' || true)
+          version=${version:-${GOATS_VERSION:-latest}}
+          if [ "$STATUS" = success ]; then
+            title="GOATS $version installs and sets up from $GOATS_CHANNEL"
+          else
+            title="GOATS $version failed to install or set up from $GOATS_CHANNEL"
+          fi
+          {
+            echo "title=$title"
+            printf 'fields<<EOF\nVersion=`%s`\nChannel=`%s`\nOS=`%s` (%s)\nPython=`%s`\nEOF\n' \
+              "$version" "$GOATS_CHANNEL" "${{ matrix.os }}" "${{ runner.arch }}" "${{ matrix.python-version }}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Report to Slack
+        if: ${{ !cancelled() && steps.report.outcome == 'success' }}
         uses: ./.github/actions/notify-slack
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           status: ${{ job.status }}
-          text: "GOATS ${{ env.GOATS_VERSION || 'latest' }} from `${{ env.GOATS_CHANNEL }}` on `${{ matrix.os }}`: install and setup ${{ job.status == 'success' && 'passed' || 'failed' }}."
+          title: ${{ steps.report.outputs.title }}
+          fields: ${{ steps.report.outputs.fields }}

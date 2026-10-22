@@ -1,63 +1,86 @@
 name: Notify Slack
 description: >
-  Post one message to the GOATS Slack channel with a link to this run. A
-  failure also mentions whoever looks after the conda pipeline. Does
-  nothing when the webhook is empty (e.g. a fork without the secret).
+  Post one message to the GOATS Slack channel: a bold one-line title, the
+  key facts as two-column fields, an optional note and link buttons, always
+  ending with "View run". A failure also mentions whoever looks after the
+  conda pipeline. Does nothing when the webhook is empty (e.g. a fork
+  without the secret), and a message Slack refuses only leaves a warning.
 
 inputs:
   webhook:
     description: Incoming webhook URL (secrets.SLACK_WEBHOOK_URL)
     required: true
   status:
-    description: success, failure or info; sets the icon and the mention
+    description: success, failure or info; sets the icon, the mention and the button colors
     required: true
-  text:
-    description: Message in Slack mrkdwn
+  title:
+    description: One short line, shown in bold
     required: true
+  fields:
+    description: One "Label=value" per line, shown as two-column fields (Slack mrkdwn)
+    required: false
+    default: ""
+  note:
+    description: Optional small grey line under the fields (Slack mrkdwn)
+    required: false
+    default: ""
+  primary:
+    description: Optional highlighted button, as "Label=url"
+    required: false
+    default: ""
+  links:
+    description: Optional extra buttons, one "Label=url" per line
+    required: false
+    default: ""
 
 runs:
   using: composite
   steps:
-    - name: Build the message
-      id: message
+    - name: Post to Slack
       if: inputs.webhook != ''
       shell: bash
       env:
+        WEBHOOK: ${{ inputs.webhook }}
         STATUS: ${{ inputs.status }}
-        TEXT: ${{ inputs.text }}
+        TITLE: ${{ inputs.title }}
+        FIELDS: ${{ inputs.fields }}
+        NOTE: ${{ inputs.note }}
+        PRIMARY: ${{ inputs.primary }}
+        LINKS: ${{ inputs.links }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       run: |
         case "$STATUS" in
-          success) prefix=":white_check_mark:" ;;
-          failure) prefix=":x: <@U0538PY7RL0>" ;;
-          *) prefix=":package:" ;;
+          success) icon="✅" mention="" ;;
+          failure) icon="❌" mention="<@U0538PY7RL0> " ;;
+          *) icon="📦" mention="" ;;
         esac
-        {
-          echo "text<<EOF"
-          echo "$prefix $TEXT"
-          echo "EOF"
-        } >> "$GITHUB_OUTPUT"
-
-    - name: Post to Slack
-      if: inputs.webhook != ''
-      uses: slackapi/slack-github-action@v2.1.0
-      with:
-        webhook: ${{ inputs.webhook }}
-        webhook-type: incoming-webhook
-        payload: |
+        # "Label=value" lines; only the first "=" splits, so URLs keep theirs.
+        pairs() { jq -R -s 'split("\n") | map(select(length > 0) | index("=") as $i | {label: .[:$i], value: .[$i + 1:]})'; }
+        fields=$(printf '%s' "$FIELDS" | pairs)
+        buttons=$({
+          printf '%s' "$PRIMARY" | pairs | jq 'map(. + {style: "primary"})'
+          printf '%s' "$LINKS" | pairs
+          jq -n --arg url "$RUN_URL" --arg status "$STATUS" \
+            '[{label: "View run", value: $url} + (if $status == "failure" then {style: "danger"} else {} end)]'
+        } | jq -s 'add')
+        payload=$(jq -n \
+          --arg text "$icon $TITLE" \
+          --arg head "$icon $mention*$TITLE*" \
+          --arg note "$NOTE" \
+          --argjson fields "$fields" \
+          --argjson buttons "$buttons" '
           {
-            "blocks": [
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": ${{ toJSON(steps.message.outputs.text) }}
-                },
-                "accessory": {
-                  "type": "button",
-                  "text": { "type": "plain_text", "text": "View run", "emoji": true },
-                  "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-                  "action_id": "view-run"
-                }
-              }
-            ]
-          }
+            text: $text,
+            blocks: (
+              [{type: "section", text: {type: "mrkdwn", text: $head}}]
+              + (if ($fields | length) > 0
+                 then [{type: "section", fields: ($fields | map({type: "mrkdwn", text: ("*\(.label)*\n\(.value)")}))}]
+                 else [] end)
+              + (if $note != "" then [{type: "context", elements: [{type: "mrkdwn", text: $note}]}] else [] end)
+              + [{type: "actions", elements: ($buttons | map(
+                  {type: "button", text: {type: "plain_text", text: .label}, url: .value}
+                  + (if .style then {style: .style} else {} end)))}]
+            )
+          }')
+        curl -fsS -X POST -H 'Content-type: application/json' --data "$payload" "$WEBHOOK" \
+          || echo "::warning::Slack did not accept the message."

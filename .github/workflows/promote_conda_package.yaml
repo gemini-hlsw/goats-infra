@@ -103,4 +103,9 @@ jobs:
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           status: ${{ job.status == 'success' && 'info' || 'failure' }}
-          text: "${{ job.status == 'success' && format('{0}-{1} is ready for production. Review and merge {2}', inputs.package, inputs.version, steps.cpr.outputs.pull-request-url) || format('Promoting {0}-{1} to conda failed.', inputs.package, inputs.version) }}"
+          title: "${{ job.status == 'success' && format('{0} {1} is ready for production', inputs.package, inputs.version) || format('Promoting {0} {1} to conda failed', inputs.package, inputs.version) }}"
+          fields: |
+            Version=`${{ inputs.version }}`
+            Channel=`conda-test` → `conda`
+          note: ${{ job.status == 'success' && 'Merging the PR publishes it to users; GitHub Pages then tests the install.' || '' }}
+          primary: ${{ steps.cpr.outputs.pull-request-url && format('Review PR={0}', steps.cpr.outputs.pull-request-url) || '' }}

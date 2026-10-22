@@ -121,6 +121,7 @@ jobs:
           filter: blob:none
 
       - name: Update the recipe from the release
+        id: update
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -130,6 +131,7 @@ jobs:
             | tar -xzO --wildcards '*/pyproject.toml' > "$RUNNER_TEMP/pyproject.toml"
           python3 sync_deps.py --pyproject-path "$RUNNER_TEMP/pyproject.toml"
           git diff
+          echo "gpp_client=$(grep -oP 'gpp-client ==\K\S+' goats-feedstock/recipe/meta.yaml)" >> "$GITHUB_OUTPUT"
 
       # Pushes made with GITHUB_TOKEN start no workflows; a dispatch does.
       - name: Commit to main and start the build
@@ -148,7 +150,12 @@ jobs:
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           status: ${{ job.status == 'success' && 'info' || 'failure' }}
-          text: "${{ job.status == 'success' && format('goats {0} was released: the recipe points at it and the conda build has started.', env.RELEASE) || format('goats {0} was released, but updating the recipe failed.', env.RELEASE) }}"
+          title: "${{ job.status == 'success' && format('goats {0} released: conda build started', env.RELEASE) || format('goats {0} released, but the recipe update failed', env.RELEASE) }}"
+          fields: |
+            Version=`${{ env.RELEASE }}`
+            Channel=`conda-test`
+            ${{ steps.update.outputs.gpp_client && format('gpp-client=`{0}`', steps.update.outputs.gpp_client) || '' }}
+          links: Release=https://github.com/${{ env.GOATS_REPO }}/releases/tag/${{ env.RELEASE }}
 
   check-dev:
     name: Check goats ${{ needs.find.outputs.dev }} without building it
@@ -190,6 +197,7 @@ jobs:
           }
 
       - name: Sync a copy of the recipe with the release
+        id: sync
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -205,15 +213,30 @@ jobs:
           yq -r '.requirements.run[] | select(test("^python( |$)") | not) | select(test("^gpp-client ==.*dev") | not)' \
             "$RUNNER_TEMP/rendered.yaml" > "$RUNNER_TEMP/specs.txt"
           cat "$RUNNER_TEMP/specs.txt"
+          echo "gpp_client=$(grep -oP 'gpp-client ==\K\S+' "$RUNNER_TEMP/rendered.yaml")" >> "$GITHUB_OUTPUT"
 
+      # On failure, keeps the package conda could not find (or its last error
+      # line) for the Slack message.
       - name: Resolve the dependencies
+        id: solve
         env:
           CONDA_CHANNEL_PRIORITY: flexible
         run: |
           mapfile -t specs < "$RUNNER_TEMP/specs.txt"
-          conda create --dry-run -n goats-check --override-channels \
-            -c "$CHANNEL_ROOT/conda-test" -c "$CHANNEL_ROOT/conda" -c "$ASTROCONDA" -c conda-forge \
-            python=3.12 "${specs[@]}"
+          if ! conda create --dry-run -n goats-check --override-channels \
+              -c "$CHANNEL_ROOT/conda-test" -c "$CHANNEL_ROOT/conda" -c "$ASTROCONDA" -c conda-forge \
+              python=3.12 "${specs[@]}" > "$RUNNER_TEMP/solve.log" 2>&1; then
+            cat "$RUNNER_TEMP/solve.log"
+            missing=$(sed -n '/not available from current channels/,/Current channels/s/^ *- //p' "$RUNNER_TEMP/solve.log" | paste -sd ' ' -)
+            if [ -n "$missing" ]; then
+              problem="not in any channel: $missing"
+            else
+              problem=$(grep -E 'Error' "$RUNNER_TEMP/solve.log" | tail -1 | cut -c1-150)
+            fi
+            echo "problem=$problem" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/solve.log"
 
       - name: Remember this dev was checked
         if: ${{ !cancelled() && steps.reach.outcome == 'success' }}
@@ -232,4 +255,12 @@ jobs:
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           status: ${{ job.status }}
-          text: "${{ job.status == 'success' && format('goats {0} (dev, not built): the recipe syncs with it and its dependencies resolve with conda.', env.DEV) || format('goats {0} (dev, not built): the conda check failed. Fix the recipe or the dependency before the next release candidate.', env.DEV) }}"
+          title: "${{ job.status == 'success' && format('goats {0}: conda check passed', env.DEV) || format('goats {0}: conda check failed', env.DEV) }}"
+          fields: |
+            Version=`${{ env.DEV }}`
+            Built=No, a dev is only checked
+            ${{ steps.sync.outputs.gpp_client && format('gpp-client=`{0}`', steps.sync.outputs.gpp_client) || '' }}
+            ${{ steps.sync.outcome == 'failure' && 'Problem=The recipe could not sync with its pyproject.toml' || '' }}
+            ${{ steps.solve.outputs.problem && format('Problem=`{0}`', steps.solve.outputs.problem) || '' }}
+          note: ${{ job.status != 'success' && 'Fix the recipe or the dependency before the next release candidate.' || '' }}
+          links: Release=https://github.com/${{ env.GOATS_REPO }}/releases/tag/${{ env.DEV }}

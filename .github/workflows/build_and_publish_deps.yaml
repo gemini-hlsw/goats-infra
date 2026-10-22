@@ -125,4 +125,8 @@ jobs:
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           status: ${{ contains(needs.*.result, 'failure') && 'failure' || 'info' }}
-          text: "${{ contains(needs.*.result, 'failure') && 'Building or publishing the GOATS dependency packages failed.' || format('New dependency packages in conda-test: {0}', needs.build.outputs.built) }}"
+          title: "${{ contains(needs.*.result, 'failure') && 'Dependency packages failed to build or publish' || 'New dependency packages in conda-test' }}"
+          fields: |
+            ${{ needs.build.outputs.built && format('Packages=`{0}`', needs.build.outputs.built) || '' }}
+            ${{ contains(needs.*.result, 'failure') && format('Failed at=`{0}`', needs.build.result == 'failure' && 'build' || 'publish') || '' }}
+          links: ${{ needs.publish.result == 'success' && format('Channel={0}/conda-test/', env.CHANNEL_ROOT) || '' }}

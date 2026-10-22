@@ -406,29 +406,57 @@ jobs:
           sparse-checkout: .github
           filter: blob:none
 
+      # Names the first stage that failed, in pipeline order.
       - name: Write the message
         id: message
         env:
-          FAILED: ${{ contains(needs.*.result, 'failure') }}
+          RESULTS: >-
+            verify=${{ needs.verify.result }}
+            build=${{ needs.build.result }}
+            test-install=${{ needs.test-install.result }}
+            publish=${{ needs.publish.result }}
+            test-published=${{ needs.test-published.result }}
+            promote=${{ needs.promote.result }}
           FINAL: ${{ needs.verify.outputs.final }}
-          VERSION: ${{ needs.verify.outputs.version }}
+          VERSION: ${{ needs.verify.outputs.version || 'from the recipe' }}
+          GPP_CLIENT: ${{ needs.verify.outputs.gpp_client }}
+          RELEASE: https://github.com/gemini-hlsw/goats/releases/tag/${{ needs.verify.outputs.version }}
         run: |
-          if [ "$FAILED" = true ]; then
-            status=failure
-            text="goats $VERSION: the conda build, test or publish failed."
-          elif [ "$FINAL" = true ]; then
-            status=success
-            text="goats $VERSION is in conda-test and passed the install tests. The promotion PR to conda opens next."
-          else
-            status=success
-            text="goats $VERSION is in conda-test for testers: add \`$CHANNEL_ROOT/conda-test\` before the usual channels and install \`goats==$VERSION\`."
-          fi
-          echo "status=$status" >> "$GITHUB_OUTPUT"
-          echo "text=$text" >> "$GITHUB_OUTPUT"
+          failed=""
+          for result in $RESULTS; do
+            if [ "${result#*=}" = failure ]; then
+              failed=${result%%=*}
+              break
+            fi
+          done
+          {
+            if [ -n "$failed" ]; then
+              echo "status=failure"
+              echo "title=goats $VERSION: the conda pipeline failed"
+              printf 'fields<<EOF\nVersion=`%s`\nFailed at=`%s`\nEOF\n' "$VERSION" "$failed"
+              echo "note="
+              echo "links=Release=$RELEASE"
+            elif [ "$FINAL" = true ]; then
+              echo "status=success"
+              echo "title=goats $VERSION passed every test in conda-test"
+              printf 'fields<<EOF\nVersion=`%s`\ngpp-client=`%s`\nNext=Promotion PR to `conda`\nEOF\n' "$VERSION" "$GPP_CLIENT"
+              echo "note="
+              echo "links=Release=$RELEASE"
+            else
+              echo "status=success"
+              echo "title=goats $VERSION is ready for testers"
+              printf 'fields<<EOF\nVersion=`%s`\nChannel=`conda-test`\ngpp-client=`%s`\nEOF\n' "$VERSION" "$GPP_CLIENT"
+              echo "note=Testers add the conda-test channel before their usual ones."
+              printf 'links<<EOF\nRelease=%s\nChannel=%s\nEOF\n' "$RELEASE" "$CHANNEL_ROOT/conda-test/"
+            fi
+          } >> "$GITHUB_OUTPUT"
 
       - name: Report
         uses: ./.github/actions/notify-slack
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           status: ${{ steps.message.outputs.status }}
-          text: ${{ steps.message.outputs.text }}
+          title: ${{ steps.message.outputs.title }}
+          fields: ${{ steps.message.outputs.fields }}
+          note: ${{ steps.message.outputs.note }}
+          links: ${{ steps.message.outputs.links }}
