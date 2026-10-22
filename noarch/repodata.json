@@ -1,0 +1,164 @@
+{
+  "info": {
+    "subdir": "noarch"
+  },
+  "packages": {},
+  "packages.conda": {
+    "ipygoldenlayout-0.4.0-pyhf69ad22_0.conda": {
+      "build": "pyhf69ad22_0",
+      "build_number": 0,
+      "depends": [
+        "python >=3.11",
+        "ipyvue >=1.5,<2",
+        "python"
+      ],
+      "license": "MIT",
+      "md5": "e88d1359cf267c1d9dc0551025d0b5e7",
+      "name": "ipygoldenlayout",
+      "noarch": "python",
+      "sha256": "f26a8cab90df4658420ef49b8ae95f5edae623d5aa9ca59f62af8bb47f4c7760",
+      "size": 370127,
+      "subdir": "noarch",
+      "timestamp": 1792682269000,
+      "version": "0.4.0"
+    },
+    "ipypopout-2.0.1-pyhf69ad22_0.conda": {
+      "build": "pyhf69ad22_0",
+      "build_number": 0,
+      "depends": [
+        "python >=3.11",
+        "ipywidgets >=7.7",
+        "ipyvuetify >=1.7.0,<2",
+        "python"
+      ],
+      "license": "MIT",
+      "md5": "572919f86cb6e348788a51ba1b5abb4b",
+      "name": "ipypopout",
+      "noarch": "python",
+      "sha256": "ecec45c0311c9798fdef395300d420337e914d2b3eadb1d62e71b1c265c09121",
+      "size": 13210,
+      "subdir": "noarch",
+      "timestamp": 1792682269006,
+      "version": "2.0.1"
+    },
+    "ipysplitpanes-0.2.0-pyhf69ad22_0.conda": {
+      "build": "pyhf69ad22_0",
+      "build_number": 0,
+      "depends": [
+        "python >=3.11",
+        "ipyvue >=1.5,<2",
+        "python"
+      ],
+      "license": "MIT",
+      "md5": "fb96a204685cd91978241947424257e2",
+      "name": "ipysplitpanes",
+      "noarch": "python",
+      "sha256": "8d3f18c1fe6d9380450878b414c7bfcc3f3cbd8231cdeda6c028ca82d06c93fc",
+      "size": 104896,
+      "subdir": "noarch",
+      "timestamp": 1792682269009,
+      "version": "0.2.0"
+    },
+    "ipyvuedraggable-1.1.0-pyhf69ad22_0.conda": {
+      "build": "pyhf69ad22_0",
+      "build_number": 0,
+      "depends": [
+        "python >=3.11",
+        "ipyvue >=1.0.0,<2",
+        "python"
+      ],
+      "license": "MIT",
+      "md5": "575e46de05d1bbef6ca26e47bc4ecc98",
+      "name": "ipyvuedraggable",
+      "noarch": "python",
+      "sha256": "bf909ed0a7ac5ae0ed2b397d38795700405acd8c2f115d9ea99ee4b70ee03f97",
+      "size": 110156,
+      "subdir": "noarch",
+      "timestamp": 1792682269011,
+      "version": "1.1.0"
+    },
+    "jdaviz-5.0.2-pyhf69ad22_0.conda": {
+      "build": "pyhf69ad22_0",
+      "build_number": 0,
+      "constrains": [
+        "dask-core >=2025"
+      ],
+      "depends": [
+        "python >=3.11",
+        "packaging",
+        "astropy-base >=6",
+        "matplotlib-base >=3.6",
+        "traitlets >=5.0.5",
+        "bqplot >=0.12.45,<0.13",
+        "glue-core >=1.24.0",
+        "glue-jupyter >=0.27.0",
+        "echo >=0.11.0",
+        "ipykernel >=7.1.0",
+        "ipyvue >=1.6",
+        "ipyvuetify >=1.7.0,<3.0",
+        "ipysplitpanes >=0.1.0",
+        "ipygoldenlayout >=0.3.0",
+        "ipywidgets >=8.0.6",
+        "solara >=1.49.0",
+        "pyyaml >=5.4.1",
+        "specutils >=2.0.0",
+        "specreduce >=1.6.0",
+        "photutils >=2.2",
+        "glue-astronomy >=0.12.0",
+        "asteval >=0.9.23",
+        "idna",
+        "vispy >=0.6.5",
+        "asdf >=2.14.3",
+        "stdatamodels >=1.3",
+        "gwcs >=0.16.1",
+        "regions >=0.6",
+        "scikit-image",
+        "sidecar >=0.5.2",
+        "ipypopout >=2.0.1",
+        "astroquery",
+        "requests",
+        "nbclassic",
+        "pyvo >=1.5.3",
+        "s3fs >=2024.10.0",
+        "joblib >=1.3.0",
+        "ipyvuedraggable >=1.1.0",
+        "spherical-geometry",
+        "python"
+      ],
+      "license": "BSD-3-Clause",
+      "md5": "a3f164e5e4c9ea5bd902ebb33e02e987",
+      "name": "jdaviz",
+      "noarch": "python",
+      "sha256": "cac15e7e00c382c818b0cc856afc5b84fc43061a9b8844f0e48160cc835c1340",
+      "size": 1741006,
+      "subdir": "noarch",
+      "timestamp": 1792682269014,
+      "version": "5.0.2"
+    },
+    "stdatamodels-6.0.0-pyhf69ad22_0.conda": {
+      "build": "pyhf69ad22_0",
+      "build_number": 0,
+      "depends": [
+        "python >=3.11",
+        "asdf >=3.3.0",
+        "asdf-transform-schemas >=0.6.0",
+        "asdf-astropy >=0.6.0",
+        "numpy >=1.25",
+        "astropy-base >=6.1",
+        "gwcs >=0.26.1",
+        "python"
+      ],
+      "license": "BSD-3-Clause",
+      "md5": "b265796f80983d194883e00d08746382",
+      "name": "stdatamodels",
+      "noarch": "python",
+      "sha256": "4cb13c7dbaec88627855e5f03d118266ab987ddc013b34c12179d78840d41b20",
+      "size": 168200,
+      "subdir": "noarch",
+      "timestamp": 1792682269016,
+      "version": "6.0.0"
+    }
+  },
+  "removed": [],
+  "repodata_version": 1
+}

@@ -1,0 +1,69 @@
+<?xml version="1.0" ?>
+<rss version="2.0">
+  <channel>
+    <title>anaconda.org/conda-test</title>
+    <link>https://conda.anaconda.org/conda-test</link>
+    <description>The most recent 7 updates for conda-test.</description>
+    <pubDate>Thu, 22 Oct 2026 19:38:11 GMT</pubDate>
+    <lastBuildDate>Thu, 22 Oct 2026 19:38:11 GMT</lastBuildDate>
+    <item>
+      <title>ipygoldenlayout 0.4.0 [noarch]</title>
+      <description>ipygoldenlayout wraps the GoldenLayout JavaScript layout manager as an ipywidget, providing dockable, resizable and draggable panes for use in Jupyter notebooks and other ipywidgets front-ends.</description>
+      <comments>https://github.com/nmearl/ipygoldenlayout</comments>
+      <guid>https://pypi.org/packages/source/i/ipygoldenlayout/ipygoldenlayout-0.4.0.tar.gz</guid>
+      <pubDate>Thu, 22 Oct 2026 15:17:49 GMT</pubDate>
+      <source>https://github.com/nmearl/ipygoldenlayout</source>
+    </item>
+    <item>
+      <title>ipypopout 2.0.1 [noarch]</title>
+      <description>ipypopout provides a button widget that detaches any ipywidget into its own browser window, keeping it synchronised with the originating kernel. It is useful for multi-monitor dashboards built with ipyvuetify or solara.</description>
+      <comments>https://github.com/widgetti/ipypopout</comments>
+      <guid>https://pypi.org/packages/source/i/ipypopout/ipypopout-2.0.1.tar.gz</guid>
+      <pubDate>Thu, 22 Oct 2026 15:17:49 GMT</pubDate>
+      <source>https://github.com/widgetti/ipypopout</source>
+    </item>
+    <item>
+      <title>ipysplitpanes 0.2.0 [noarch]</title>
+      <description>ipysplitpanes exposes the splitpanes Vue component as an ipywidget, allowing resizable split layouts to be composed from Python in Jupyter notebooks and other ipywidgets front-ends.</description>
+      <comments>https://github.com/nmearl/ipysplitpanes</comments>
+      <guid>https://pypi.org/packages/source/i/ipysplitpanes/ipysplitpanes-0.2.0.tar.gz</guid>
+      <pubDate>Thu, 22 Oct 2026 15:17:49 GMT</pubDate>
+      <source>https://github.com/nmearl/ipysplitpanes</source>
+    </item>
+    <item>
+      <title>ipyvuedraggable 1.1.0 [noarch]</title>
+      <description>ipyvuedraggable makes the Vue.Draggable component available as an ipywidget, adding drag-and-drop sorting of lists and grids to ipyvue based user interfaces.</description>
+      <comments>https://github.com/mariobuikhuizen/ipyvuedraggable</comments>
+      <guid>https://pypi.org/packages/source/i/ipyvuedraggable/ipyvuedraggable-1.1.0.tar.gz</guid>
+      <pubDate>Thu, 22 Oct 2026 15:17:49 GMT</pubDate>
+      <source>https://github.com/mariobuikhuizen/ipyvuedraggable</source>
+    </item>
+    <item>
+      <title>jdaviz 5.0.2 [noarch]</title>
+      <description>jdaviz is a package of astronomical data analysis visualization tools based on the Jupyter platform. It bundles the Specviz, Cubeviz, Mosviz and Imviz configurations used to explore JWST and other observatory data, either from a notebook or from the standalone command line application.</description>
+      <link>https://jdaviz.readthedocs.io/</link>
+      <comments>https://github.com/spacetelescope/jdaviz</comments>
+      <guid>https://pypi.org/packages/source/j/jdaviz/jdaviz-5.0.2.tar.gz</guid>
+      <pubDate>Thu, 22 Oct 2026 15:17:49 GMT</pubDate>
+      <source>https://jdaviz.readthedocs.io/</source>
+    </item>
+    <item>
+      <title>stdatamodels 6.0.0 [noarch]</title>
+      <description>stdatamodels provides the DataModel base classes and ASDF schema support shared by the JWST and Roman calibration pipelines, wrapping FITS and ASDF files in validated, attribute-style Python objects.</description>
+      <link>https://stdatamodels.readthedocs.io/</link>
+      <comments>https://github.com/spacetelescope/stdatamodels</comments>
+      <guid>https://pypi.org/packages/source/s/stdatamodels/stdatamodels-6.0.0.tar.gz</guid>
+      <pubDate>Thu, 22 Oct 2026 15:17:49 GMT</pubDate>
+      <source>https://github.com/spacetelescope/stdatamodels</source>
+    </item>
+    <item>
+      <title>goats 26.11.0rc2 [linux-64, osx-64]</title>
+      <description>Gemini Observation and Analysis of Targets System.</description>
+      <link>https://goats.readthedocs.io/en/26.11.0rc2/</link>
+      <comments>https://github.com/gemini-hlsw/goats</comments>
+      <guid>https://github.com/gemini-hlsw/goats/archive/26.11.0rc2.tar.gz</guid>
+      <pubDate>Thu, 30 Jul 2026 19:14:56 GMT</pubDate>
+      <source>https://github.com/gemini-hlsw/goats</source>
+    </item>
+  </channel>
+</rss>
