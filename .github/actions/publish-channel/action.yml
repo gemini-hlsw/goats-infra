@@ -1,0 +1,104 @@
+name: Publish to a pre-release channel
+description: >
+  Add built packages to conda-test or conda-dev, prune what nobody needs,
+  reindex, force-push the channel as the single commit of its branch and
+  redeploy GitHub Pages. The caller must have checked out main, set up
+  Miniforge, and hold contents: write and actions: write permissions.
+
+inputs:
+  channel:
+    description: conda-test or conda-dev; also the name of the branch that holds it
+    required: true
+  packages:
+    description: Directory with the built .conda files in noarch/, linux-64/ or osx-64/
+    required: true
+  message:
+    description: Commit message for the channel branch
+    required: true
+  token:
+    description: Token allowed to push and to start workflows
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # Pre-release channels live outside main's history: each branch always
+    # holds one commit, so deleted packages really go away. The first publish
+    # starts from the copy in docs/gh_pages/, if main still has one.
+    - name: Fetch the channel
+      shell: bash -el {0}
+      env:
+        CHANNEL: ${{ inputs.channel }}
+      run: |
+        case "$CHANNEL" in
+          conda-test|conda-dev) ;;
+          *) echo "::error::Unknown channel '$CHANNEL'."; exit 1 ;;
+        esac
+        dir="$RUNNER_TEMP/$CHANNEL-channel"
+        rm -rf "$dir" && mkdir -p "$dir"
+        status=0
+        git ls-remote --exit-code --heads origin "$CHANNEL" >/dev/null || status=$?
+        if [ "$status" -eq 0 ]; then
+          git fetch --depth 1 origin "$CHANNEL"
+          git archive FETCH_HEAD | tar -x -C "$dir"
+        elif [ "$status" -eq 2 ]; then
+          if [ -d "docs/gh_pages/$CHANNEL" ]; then
+            echo "No $CHANNEL branch yet; starting from docs/gh_pages/$CHANNEL."
+            cp -r "docs/gh_pages/$CHANNEL/." "$dir"/
+          fi
+        else
+          echo "::error::Could not reach the $CHANNEL branch; refusing to overwrite it."
+          exit 1
+        fi
+        echo "CHANNEL_DIR=$dir" >> "$GITHUB_ENV"
+
+    - name: Add the new packages
+      shell: bash -el {0}
+      env:
+        PACKAGES: ${{ inputs.packages }}
+      run: |
+        shopt -s nullglob
+        for subdir in noarch linux-64 osx-64; do
+          files=("$PACKAGES/$subdir"/*.conda)
+          if [ "${#files[@]}" -gt 0 ]; then
+            mkdir -p "$CHANNEL_DIR/$subdir"
+            cp -v "${files[@]}" "$CHANNEL_DIR/$subdir/"
+          fi
+        done
+
+    # Index, prune against the index, then index again without the deleted files.
+    - name: Prune and index
+      shell: bash -el {0}
+      env:
+        CHANNEL: ${{ inputs.channel }}
+      run: |
+        conda install -y -n base conda-index
+        conda run -n base python -m conda_index --no-compact --channeldata "$CHANNEL_DIR"
+        conda run -n base python prune_channel.py "$CHANNEL_DIR"
+        conda run -n base python -m conda_index --no-compact --channeldata "$CHANNEL_DIR"
+        rm -rf "$CHANNEL_DIR"/.cache "$CHANNEL_DIR"/*/.cache
+        {
+          echo "### $CHANNEL now holds"
+          find "$CHANNEL_DIR" -name '*.conda' -printf '%P\n' | sort | sed 's/^/- `/; s/$/`/'
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Push one commit and redeploy Pages
+      shell: bash -el {0}
+      env:
+        CHANNEL: ${{ inputs.channel }}
+        GH_TOKEN: ${{ inputs.token }}
+        MESSAGE: ${{ inputs.message }}
+      run: |
+        cd "$CHANNEL_DIR"
+        remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+        git init -q -b "$CHANNEL"
+        # Knowing the current commit lets the push send only the new packages
+        # instead of the whole channel. There is none on the first publish.
+        git fetch -q --depth 1 "$remote" "$CHANNEL" 2>/dev/null || true
+        git add -A
+        git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "$MESSAGE"
+        git push -q --force "$remote" "$CHANNEL"
+        # Pushes made with GITHUB_TOKEN start no workflows; a dispatch does.
+        gh workflow run gh_pages.yaml --repo "$GITHUB_REPOSITORY" --ref main
