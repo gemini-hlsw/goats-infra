@@ -34,7 +34,8 @@ runs:
           conda-test|conda-dev) ;;
           *) echo "::error::Unknown channel '$CHANNEL'."; exit 1 ;;
         esac
-        dir="$RUNNER_TEMP/$CHANNEL-channel"
+        # conda-index titles the channel pages after this folder's name.
+        dir="$RUNNER_TEMP/channels/$CHANNEL"
         rm -rf "$dir" && mkdir -p "$dir"
         status=0
         git ls-remote --exit-code --heads origin "$CHANNEL" >/dev/null || status=$?
