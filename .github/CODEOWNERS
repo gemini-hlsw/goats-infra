@@ -1,0 +1,4 @@
+# Everything here ships to users: the recipes, the workflows that build them,
+# and the channels themselves. Takes effect once a branch rule on main
+# requires review from code owners.
+* @davner @miguelgomezgomez

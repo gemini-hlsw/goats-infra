@@ -11,8 +11,9 @@ on:
         options:
           - conda
           - conda-test
+          - conda-dev
       version:
-        description: GOATS version to install, e.g. 26.10.1rc1 (empty for the latest)
+        description: GOATS version to install, e.g. 26.11.0rc1 (empty for the latest)
         required: false
         type: string
   schedule:
@@ -48,7 +49,8 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
-          channels: ${{ env.GOATS_CHANNEL == 'conda-test' && 'https://gemini-hlsw.github.io/goats-infra/conda-test, ' || '' }}https://gemini-hlsw.github.io/goats-infra/conda, http://astroconda.gemini.edu/public, conda-forge
+          # Same channel order as the build's test-install job; keep them in sync.
+          channels: ${{ env.GOATS_CHANNEL == 'conda-dev' && 'https://gemini-hlsw.github.io/goats-infra/conda-dev, https://gemini-hlsw.github.io/goats-infra/conda-test, ' || env.GOATS_CHANNEL == 'conda-test' && 'https://gemini-hlsw.github.io/goats-infra/conda-test, ' || '' }}https://gemini-hlsw.github.io/goats-infra/conda, http://astroconda.gemini.edu/public, conda-forge
           channel-priority: flexible
           conda-remove-defaults: "true"
           show-channel-urls: true
@@ -58,9 +60,22 @@ jobs:
           conda install "goats${GOATS_VERSION:+==$GOATS_VERSION}" -y
           conda list "^(goats|gpp-client)$"
 
-      - name: Check gpp-client targets GPP production
+      # A gpp-client .devN carries GPP development code (ADR 0002); anything
+      # else, and everything in conda, must talk to GPP production.
+      - name: Check gpp-client targets the right GPP environment
         run: |
-          python -c "from gpp_client.generated.package_environment import PACKAGE_ENVIRONMENT as env; print(env); assert env == 'PRODUCTION'"
+          python - <<'EOF'
+          import os
+          from importlib.metadata import version
+
+          from gpp_client.generated.package_environment import PACKAGE_ENVIRONMENT as env
+
+          gpp_client = version("gpp-client")
+          expected = "DEVELOPMENT" if ".dev" in gpp_client else "PRODUCTION"
+          print(f"gpp-client {gpp_client}: {env}")
+          assert env == expected, f"expected {expected}"
+          assert os.environ["GOATS_CHANNEL"] != "conda" or env == "PRODUCTION"
+          EOF
 
       - name: Run setup without prompts
         env:
