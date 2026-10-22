@@ -93,7 +93,8 @@ def update_meta_yaml(
                 changed.append((package, old_constraint, constraint))
             updated = new_content
         else:
-            # If it comes from uv.sources (git-pinned) and is not in meta.yaml, skip it.
+            # Packages only in uv.sources (git-pinned dev extras such as
+            # fits-storage) are not runtime dependencies; skip them.
             if package in uv_packages:
                 continue
             # Otherwise append it under the run: section.
@@ -110,22 +111,32 @@ def main() -> None:
         description="Sync dependencies from pyproject.toml into conda recipe meta.yaml."
     )
     parser.add_argument("--pyproject-path", type=Path, default=Path("./pyproject.toml"))
-    parser.add_argument("--meta-path", type=Path, default=Path("./recipe/meta.yaml"))
+    parser.add_argument(
+        "--meta-path", type=Path, default=Path("./goats-feedstock/recipe/meta.yaml")
+    )
     parser.add_argument("--dry-run", "-n", action="store_true")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Exit with status 1 if meta.yaml is out of sync; change nothing.",
+    )
     args = parser.parse_args()
 
-    deps = load_dependencies(args.pyproject_path)
+    project_deps = load_dependencies(args.pyproject_path)
     uv = load_uv_sources(args.pyproject_path)
-    deps.update(uv)
+    deps = {**project_deps, **uv}
 
     content = args.meta_path.read_text()
-    updated_content, changed, added = update_meta_yaml(content, deps, set(uv.keys()))
+    # A uv.sources package that is also a project dependency (jdaviz) must be
+    # in the recipe; only the other git-pinned packages may be missing.
+    uv_only = set(uv) - set(project_deps)
+    updated_content, changed, added = update_meta_yaml(content, deps, uv_only)
 
     if not changed and not added:
         logger.info("meta.yaml already up to date.")
         return
 
-    if args.dry_run:
+    if args.dry_run or args.check:
         if changed:
             logger.info("Dry-run — would update:")
             for pkg, old, new in changed:
@@ -134,6 +145,9 @@ def main() -> None:
             logger.info("Dry-run — would add:")
             for pkg, new in added:
                 logger.info("  + %s %s", pkg, new)
+        if args.check:
+            logger.error("meta.yaml is out of sync with %s.", args.pyproject_path)
+            raise SystemExit(1)
         return
 
     args.meta_path.write_text(updated_content)
