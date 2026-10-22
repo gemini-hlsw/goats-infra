@@ -107,5 +107,4 @@ jobs:
           fields: |
             Version=`${{ inputs.version }}`
             Channel=`conda-test` → `conda`
-          note: ${{ job.status == 'success' && 'Merging the PR publishes it to users; GitHub Pages then tests the install.' || '' }}
           primary: ${{ steps.cpr.outputs.pull-request-url && format('Review PR={0}', steps.cpr.outputs.pull-request-url) || '' }}

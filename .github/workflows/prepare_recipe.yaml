@@ -155,7 +155,6 @@ jobs:
             Version=`${{ env.RELEASE }}`
             Channel=`conda-test`
             ${{ steps.update.outputs.gpp_client && format('gpp-client=`{0}`', steps.update.outputs.gpp_client) || '' }}
-          links: Release=https://github.com/${{ env.GOATS_REPO }}/releases/tag/${{ env.RELEASE }}
 
   check-dev:
     name: Check goats ${{ needs.find.outputs.dev }} without building it
@@ -258,9 +257,6 @@ jobs:
           title: "${{ job.status == 'success' && format('goats {0}: conda check passed', env.DEV) || format('goats {0}: conda check failed', env.DEV) }}"
           fields: |
             Version=`${{ env.DEV }}`
-            Built=No, a dev is only checked
             ${{ steps.sync.outputs.gpp_client && format('gpp-client=`{0}`', steps.sync.outputs.gpp_client) || '' }}
             ${{ steps.sync.outcome == 'failure' && 'Problem=The recipe could not sync with its pyproject.toml' || '' }}
             ${{ steps.solve.outputs.problem && format('Problem=`{0}`', steps.solve.outputs.problem) || '' }}
-          note: ${{ job.status != 'success' && 'Fix the recipe or the dependency before the next release candidate.' || '' }}
-          links: Release=https://github.com/${{ env.GOATS_REPO }}/releases/tag/${{ env.DEV }}

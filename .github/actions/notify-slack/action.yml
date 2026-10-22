@@ -1,17 +1,19 @@
 name: Notify Slack
 description: >
   Post one message to the GOATS Slack channel: a bold one-line title, the
-  key facts as two-column fields, an optional note and link buttons, always
-  ending with "View run". A failure also mentions whoever looks after the
-  conda pipeline. Does nothing when the webhook is empty (e.g. a fork
-  without the secret), and a message Slack refuses only leaves a warning.
+  key facts as two-column fields and a row of link buttons ending with
+  "View run". A failure also mentions whoever looks after the conda
+  pipeline. Does nothing when the webhook is empty (e.g. a fork without the
+  secret), and a message Slack refuses only leaves a warning. GOATSbot has
+  no interactivity configured, so Slack also warns when someone clicks a
+  button; the link still opens.
 
 inputs:
   webhook:
     description: Incoming webhook URL (secrets.SLACK_WEBHOOK_URL)
     required: true
   status:
-    description: success, failure or info; sets the icon, the mention and the button colors
+    description: success, failure or info; sets the icon, the mention and the "View run" color
     required: true
   title:
     description: One short line, shown in bold
@@ -20,12 +22,8 @@ inputs:
     description: One "Label=value" per line, shown as two-column fields (Slack mrkdwn)
     required: false
     default: ""
-  note:
-    description: Optional small grey line under the fields (Slack mrkdwn)
-    required: false
-    default: ""
   primary:
-    description: Optional highlighted button, as "Label=url"
+    description: Optional highlighted first button, as "Label=url"
     required: false
     default: ""
   links:
@@ -44,7 +42,6 @@ runs:
         STATUS: ${{ inputs.status }}
         TITLE: ${{ inputs.title }}
         FIELDS: ${{ inputs.fields }}
-        NOTE: ${{ inputs.note }}
         PRIMARY: ${{ inputs.primary }}
         LINKS: ${{ inputs.links }}
         RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -66,7 +63,6 @@ runs:
         payload=$(jq -n \
           --arg text "$icon $TITLE" \
           --arg head "$icon $mention*$TITLE*" \
-          --arg note "$NOTE" \
           --argjson fields "$fields" \
           --argjson buttons "$buttons" '
           {
@@ -76,10 +72,10 @@ runs:
               + (if ($fields | length) > 0
                  then [{type: "section", fields: ($fields | map({type: "mrkdwn", text: ("*\(.label)*\n\(.value)")}))}]
                  else [] end)
-              + (if $note != "" then [{type: "context", elements: [{type: "mrkdwn", text: $note}]}] else [] end)
-              + [{type: "actions", elements: ($buttons | map(
-                  {type: "button", text: {type: "plain_text", text: .label}, url: .value}
-                  + (if .style then {style: .style} else {} end)))}]
+              + [{type: "actions", elements: ($buttons | to_entries | map(
+                  {type: "button", text: {type: "plain_text", text: .value.label, emoji: true},
+                   url: .value.value, action_id: "link-\(.key)"}
+                  + (if .value.style then {style: .value.style} else {} end)))}]
             )
           }')
         curl -fsS -X POST -H 'Content-type: application/json' --data "$payload" "$WEBHOOK" \
