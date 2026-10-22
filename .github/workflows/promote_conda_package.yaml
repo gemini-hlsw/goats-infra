@@ -1,17 +1,19 @@
 name: Promote Conda package to production
 
-# Copies already-built .conda artifacts from the conda-test channel into the
+# Copies an already-built final release from the conda-test channel into the
 # production channel and reindexes it -- the exact bytes that were tested are
-# promoted, nothing is rebuilt.
+# promoted, nothing is rebuilt. Our own dependencies the package needs (e.g.
+# jdaviz for goats) are promoted with it. See promote.py. Production changes
+# go through a reviewed PR to main.
 on:
   workflow_dispatch:
     inputs:
       package:
-        description: Package name to promote (e.g. jdaviz, goats)
+        description: Package name to promote (e.g. goats)
         required: true
         type: string
       version:
-        description: Version to promote (e.g. 5.0.2)
+        description: Final version to promote (e.g. 26.11.0); rcN and devN are refused
         required: true
         type: string
 
@@ -26,24 +28,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-
-      - name: Copy packages from conda-test to conda
-        run: |
-          shopt -s nullglob
-          found=0
-          for subdir in noarch linux-64 osx-64; do
-            src=docs/gh_pages/conda-test/$subdir
-            dst=docs/gh_pages/conda/$subdir
-            for f in "$src"/${{ inputs.package }}-${{ inputs.version }}-*.conda; do
-              mkdir -p "$dst"
-              cp -v "$f" "$dst/"
-              found=1
-            done
-          done
-          if [ "$found" -eq 0 ]; then
-            echo "::error::No ${{ inputs.package }}-${{ inputs.version }}-*.conda found in the conda-test channel. Publish it there first."
-            exit 1
-          fi
 
       - name: Set up Miniforge
         uses: conda-incubator/setup-miniconda@v4
@@ -60,6 +44,33 @@ jobs:
         run: |
           conda install -y conda-index
 
+      # conda-test lives on its own branch; until its first publish there,
+      # main still holds it.
+      - name: Fetch the conda-test channel
+        run: |
+          mkdir -p "$RUNNER_TEMP/conda-test"
+          if git ls-remote --exit-code --heads origin conda-test >/dev/null; then
+            git fetch --depth 1 origin conda-test
+            git archive FETCH_HEAD | tar -x -C "$RUNNER_TEMP/conda-test"
+          else
+            cp -r docs/gh_pages/conda-test/. "$RUNNER_TEMP/conda-test"/
+          fi
+
+      # promote.py imports conda, which lives in the base environment.
+      - name: Copy packages from conda-test to conda
+        id: copy
+        env:
+          PACKAGE: ${{ inputs.package }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -o pipefail
+          conda run -n base python promote.py "$PACKAGE" "$VERSION" --source "$RUNNER_TEMP/conda-test" | tee "$RUNNER_TEMP/promoted.txt"
+          {
+            echo "files<<EOF"
+            sort -u "$RUNNER_TEMP/promoted.txt" | sed 's/^/- `/; s/$/`/'
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Index Conda channel
         run: python -m conda_index --no-compact --channeldata docs/gh_pages/conda
 
@@ -74,14 +85,18 @@ jobs:
           branch: promote-${{ inputs.package }}-${{ inputs.version }}
           title: Promote `${{ inputs.package }}-${{ inputs.version }}` to production.
           body: |
-            This PR promotes a Conda package from the `conda-test` channel to the
+            This PR promotes a final release from the `conda-test` channel to the
             production `conda` channel. The artifacts are the exact files that
-            were built and tested for `conda-test` -- nothing was rebuilt.
+            were built, installed and tested there -- nothing was rebuilt.
 
             - **Package:** `${{ inputs.package }}`
             - **Version:** `${{ inputs.version }}`
 
+            Files copied, including the dependencies it needs:
+            ${{ steps.copy.outputs.files }}
+
             The production Conda index has been updated in `docs/gh_pages/conda/`.
+            After merging, run `Test Conda Install` with channel `conda` and this version.
           reviewers: miguelgomezgomez
           assignees: miguelgomezgomez
           commit-message: "Promote ${{ inputs.package }}-${{ inputs.version }} to conda."
