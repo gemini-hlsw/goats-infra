@@ -23,6 +23,13 @@ env:
   # Scheduled runs have no inputs, so they test the latest release in conda.
   GOATS_CHANNEL: ${{ inputs.channel || 'conda' }}
   GOATS_VERSION: ${{ inputs.version }}
+  CHANNEL_ROOT: https://gemini-hlsw.github.io/goats-infra
+  ASTROCONDA: http://astroconda.gemini.edu/public
+  # astroconda times out now and then; let conda retry before giving up.
+  CONDA_REMOTE_MAX_RETRIES: "6"
+  CONDA_REMOTE_BACKOFF_FACTOR: "2"
+  CONDA_REMOTE_CONNECT_TIMEOUT_SECS: "30"
+  CONDA_REMOTE_READ_TIMEOUT_SECS: "120"
 
 jobs:
   build_conda_env:
@@ -43,22 +50,45 @@ jobs:
         if: ${{ matrix.os == 'macos-15-intel' }}
         run: brew install coreutils
 
+      # Only conda-forge here: this action cannot retry, so the channels that
+      # time out are left to the install step, which can.
       - name: Setup Miniforge
-        uses: conda-incubator/setup-miniconda@v3
+        uses: conda-incubator/setup-miniconda@v4
         with:
-          auto-update-conda: true
-          python-version: ${{ matrix.python-version }}
           miniforge-version: latest
-          # Same channel order as the build's test-install job; keep them in sync.
-          channels: ${{ env.GOATS_CHANNEL == 'conda-dev' && 'https://gemini-hlsw.github.io/goats-infra/conda-dev, https://gemini-hlsw.github.io/goats-infra/conda-test, ' || env.GOATS_CHANNEL == 'conda-test' && 'https://gemini-hlsw.github.io/goats-infra/conda-test, ' || '' }}https://gemini-hlsw.github.io/goats-infra/conda, http://astroconda.gemini.edu/public, conda-forge
-          channel-priority: flexible
+          channels: conda-forge
           conda-remove-defaults: "true"
           show-channel-urls: true
 
+      # Same channel order as the build's test-install job; keep them in sync.
+      # A failure that only comes from an unreachable channel is retried.
       - name: Install GOATS from Conda channel
+        env:
+          CONDA_CHANNEL_PRIORITY: flexible
         run: |
-          conda install "goats${GOATS_VERSION:+==$GOATS_VERSION}" -y
-          conda list "^(goats|gpp-client)$"
+          set -o pipefail
+          case "$GOATS_CHANNEL" in
+            conda-dev) channels="conda-dev conda-test conda" ;;
+            conda-test) channels="conda-test conda" ;;
+            *) channels="conda" ;;
+          esac
+          channel_args=()
+          for channel in $channels; do channel_args+=(-c "$CHANNEL_ROOT/$channel"); done
+          channel_args+=(-c "$ASTROCONDA" -c conda-forge)
+          for attempt in 1 2 3; do
+            if conda install -y --override-channels "${channel_args[@]}" \
+                "python=${{ matrix.python-version }}" "goats${GOATS_VERSION:+==$GOATS_VERSION}" \
+                2>&1 | tee "$RUNNER_TEMP/install.log"; then
+              conda list "^(goats|gpp-client)$"
+              exit 0
+            fi
+            if ! grep -qE "Download error|Timeout was reached|CondaHTTPError|Could not resolve host|Connection reset" "$RUNNER_TEMP/install.log"; then
+              exit 1
+            fi
+            echo "::warning::A channel could not be reached, retrying the install ($attempt/3)."
+            sleep 60
+          done
+          exit 1
 
       # A gpp-client .devN carries GPP development code (ADR 0002); anything
       # else, and everything in conda, must talk to GPP production.
