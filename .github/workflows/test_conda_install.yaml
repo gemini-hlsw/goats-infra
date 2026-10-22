@@ -31,6 +31,9 @@ env:
   CONDA_REMOTE_CONNECT_TIMEOUT_SECS: "30"
   CONDA_REMOTE_READ_TIMEOUT_SECS: "120"
 
+# setup-miniconda turns on `set -eo pipefail` in login shells, and on Ubuntu
+# ~/.bash_logout then turns any explicit `exit` into status 1. Scripts that
+# succeed must end on their last command, never on `exit 0`.
 jobs:
   build_conda_env:
     name: Install and run (${{ matrix.python-version }}, ${{ matrix.os }})
@@ -75,20 +78,18 @@ jobs:
           channel_args=()
           for channel in $channels; do channel_args+=(-c "$CHANNEL_ROOT/$channel"); done
           channel_args+=(-c "$ASTROCONDA" -c conda-forge)
-          for attempt in 1 2 3; do
-            if conda install -y --override-channels "${channel_args[@]}" \
-                "python=${{ matrix.python-version }}" "goats${GOATS_VERSION:+==$GOATS_VERSION}" \
-                2>&1 | tee "$RUNNER_TEMP/install.log"; then
-              conda list "^(goats|gpp-client)$"
-              exit 0
-            fi
-            if ! grep -qE "Download error|Timeout was reached|CondaHTTPError|Could not resolve host|Connection reset" "$RUNNER_TEMP/install.log"; then
+          attempt=1
+          until conda install -y --override-channels "${channel_args[@]}" \
+              "python=${{ matrix.python-version }}" "goats${GOATS_VERSION:+==$GOATS_VERSION}" \
+              2>&1 | tee "$RUNNER_TEMP/install.log"; do
+            if [ "$attempt" -eq 3 ] || ! grep -qE "Download error|Timeout was reached|CondaHTTPError|Could not resolve host|Connection reset" "$RUNNER_TEMP/install.log"; then
               exit 1
             fi
             echo "::warning::A channel could not be reached, retrying the install ($attempt/3)."
+            attempt=$((attempt + 1))
             sleep 60
           done
-          exit 1
+          conda list "^(goats|gpp-client)$"
 
       # A gpp-client .devN carries GPP development code (ADR 0002); anything
       # else, and everything in conda, must talk to GPP production.

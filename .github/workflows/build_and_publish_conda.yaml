@@ -23,6 +23,9 @@ env:
   CONDA_REMOTE_CONNECT_TIMEOUT_SECS: "30"
   CONDA_REMOTE_READ_TIMEOUT_SECS: "120"
 
+# setup-miniconda turns on `set -eo pipefail` in login shells, and on Ubuntu
+# ~/.bash_logout then turns any explicit `exit` into status 1. Scripts that
+# succeed must end on their last command, never on `exit 0`.
 jobs:
   verify:
     name: Verify recipe and pick the track
@@ -188,16 +191,17 @@ jobs:
           GPP_CLIENT: ${{ steps.metadata.outputs.gpp_client }}
           CONDA_LOCAL_REPODATA_TTL: "0"
         run: |
-          for attempt in $(seq 1 20); do
-            if conda search --override-channels -c conda-forge "gpp-client==$GPP_CLIENT" >/dev/null 2>&1; then
-              echo "gpp-client $GPP_CLIENT is available on conda-forge."
-              exit 0
+          attempt=1
+          until conda search --override-channels -c conda-forge "gpp-client==$GPP_CLIENT" >/dev/null 2>&1; do
+            if [ "$attempt" -eq 20 ]; then
+              echo "::error::gpp-client $GPP_CLIENT never showed up on conda-forge."
+              exit 1
             fi
             echo "gpp-client $GPP_CLIENT not on conda-forge yet ($attempt/20), waiting 3 minutes."
+            attempt=$((attempt + 1))
             sleep 180
           done
-          echo "::error::gpp-client $GPP_CLIENT never showed up on conda-forge."
-          exit 1
+          echo "gpp-client $GPP_CLIENT is available on conda-forge."
 
   # Dev track only, and only when conda-dev lacks the pinned gpp-client .devN.
   gpp-client-dev:
@@ -314,21 +318,19 @@ jobs:
             channel_args+=(--channel "file://$RUNNER_TEMP/gpp-client-dev")
           fi
           for channel in $CHANNELS; do channel_args+=(--channel "$channel"); done
-          for attempt in 1 2 3; do
-            if conda build goats-feedstock/recipe \
-                --output-folder ${{ runner.temp }}/conda-artifacts \
-                "${channel_args[@]}" \
-                --override-channels \
-                --no-anaconda-upload 2>&1 | tee "$RUNNER_TEMP/build.log"; then
-              exit 0
-            fi
-            if ! grep -qE "Download error|Timeout was reached|CondaHTTPError|Could not resolve host|Connection reset" "$RUNNER_TEMP/build.log"; then
+          attempt=1
+          until conda build goats-feedstock/recipe \
+              --output-folder ${{ runner.temp }}/conda-artifacts \
+              "${channel_args[@]}" \
+              --override-channels \
+              --no-anaconda-upload 2>&1 | tee "$RUNNER_TEMP/build.log"; do
+            if [ "$attempt" -eq 3 ] || ! grep -qE "Download error|Timeout was reached|CondaHTTPError|Could not resolve host|Connection reset" "$RUNNER_TEMP/build.log"; then
               exit 1
             fi
             echo "::warning::A channel could not be reached, retrying the build ($attempt/3)."
+            attempt=$((attempt + 1))
             sleep 60
           done
-          exit 1
 
       - name: Upload built artifacts
         uses: actions/upload-artifact@v6
