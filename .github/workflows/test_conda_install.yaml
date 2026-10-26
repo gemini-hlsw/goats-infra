@@ -142,10 +142,17 @@ jobs:
           python - <<'EOF'
           from importlib.metadata import version
 
-          from gpp_client.generated.package_environment import PACKAGE_ENVIRONMENT as env
+          gpp_client = version("gpp-client")
+          # gpp-client 26.4 and older, pinned by goats 26.4 (still the latest
+          # in conda), have no package environment: they pick it at run time,
+          # production by default.
+          if tuple(map(int, gpp_client.split(".")[:2])) < (26, 5):
+              print(f"gpp-client {gpp_client} has no package environment to check.")
+          else:
+              from gpp_client.generated.package_environment import PACKAGE_ENVIRONMENT as env
 
-          print(f"gpp-client {version('gpp-client')}: {env}")
-          assert env == "PRODUCTION", "expected PRODUCTION"
+              print(f"gpp-client {gpp_client}: {env}")
+              assert env == "PRODUCTION", "expected PRODUCTION"
           EOF
 
       - name: Run setup without prompts
