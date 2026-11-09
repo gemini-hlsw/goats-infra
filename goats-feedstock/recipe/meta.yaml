@@ -1,5 +1,5 @@
 {% set name = "goats" %}
-{% set version = "26.11.0rc2" %}
+{% set version = "26.11.0" %}
 {% set python_min = "3.12" %}
 
 package:
@@ -8,14 +8,14 @@ package:
 
 source:
   url: https://github.com/gemini-hlsw/goats/archive/{{ version }}.tar.gz
-  sha256: 76a565f623cd23e7e687d16bf273fce58f3663b0c9648ae66f0a4256128de56d
+  sha256: a286f9046166f9f35f6c18752e2b2cc2704823a06806d0c6d4a0ba0eb3bbbfed
 
 build:
   entry_points:
     - goats = goats_cli:cli
   script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
   skip: true   # [win or arm64]
-  number: 1
+  number: 0
 
 requirements:
   host:
@@ -30,11 +30,11 @@ requirements:
     - channels_redis >=4.3.0,<5
     - channels >=4.0,<5
     - click >=8.3.1,<9
-    - django ==5.2.17
+    - django ==5.2.18
     - django-cors-headers >=4.9.0,<5
     - django-dramatiq >=0.15.0
     - django-crispy-forms <2.6
-    - djangorestframework ==3.17.2,<4
+    - djangorestframework ==3.18.2
     - dramatiq-abort >=1.2.1
     - dramatiq >=1.18.0,<2
     - marshmallow ==3.26.2
